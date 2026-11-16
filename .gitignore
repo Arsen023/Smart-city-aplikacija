@@ -1,0 +1,27 @@
+# Zavisnosti
+node_modules/
+
+# Build
+dist/
+
+# Kloniran repo samo za basic-host
+ext-apps/
+
+# Tajni ključevi
+.env
+.env.*
+!.env.example
+
+# Logovi
+npm-debug.log*
+*.log
+
+# Sistem i editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Kompajlirani JS u korenu
+/main.js
+/server.js
