@@ -1,0 +1,41 @@
+{
+  "name": "smart-city-aplikacija",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "build": "tsc --noEmit && tsc -p tsconfig.server.json && cross-env INPUT=mcp-app.html vite build",
+  "start": "tsx main.ts",
+  "dev": "concurrently \"cross-env INPUT=mcp-app.html vite build --watch\" \"tsx watch main.ts\""
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arsen023/Smart-city-aplikacija.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Arsen023/Smart-city-aplikacija/issues"
+  },
+  "homepage": "https://github.com/Arsen023/Smart-city-aplikacija#readme",
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "cors": "^2.8.6",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "concurrently": "^10.0.7",
+    "cross-env": "^10.1.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+ 
+}
