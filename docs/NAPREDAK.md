@@ -1,0 +1,68 @@
+# Napredak – Smart-city-aplikacija
+
+Poslednje ažuriranje: 2026-11-17 (Sara)
+
+## Zadaci
+
+| ID | Zadatak | Vlasnik | Status | Grana | PR | Ažurirano |
+|---|---|---|---|---|---|---|
+| T01 | Pristup ekoNET API-ju (Mario, Nikola) | zajedno | U toku | — | — | 2026-11-17 |
+| T02 | MCP Apps Quickstart | Sara | Gotovo | — | — | 2026-11-16 |
+| T03 | A2UI Quickstart | Luka | [proveriti sa Lukom] | — | — | — |
+| T04 | Prezentacija (D1) | zajedno | U toku | — | — | 2026-11-16 |
+| T05 | Stitch skica i tabela mapiranja | Luka | U toku | — | — | 2026-11-16 |
+| T06 | K1 ekoNET klijent + fixtures | Sara | Nije početo | `sara/ekonet` | — | — |
+| T07 | K2 modul pravila + testovi | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
+| T08 | K3 LLM korak | Luka | Nije početo | — | — | — |
+| T09 | K4 MCP server, 4 alata | Sara | Nije početo | `sara/server` | — | — |
+| T10 | Verzija A, 7 elemenata | Sara | Nije početo | `sara/ui-a` | — | — |
+| T11 | Grafikon 24 h u verziji A | Sara | Nije početo | `sara/ui-a` | — | — |
+| T12 | A2UI poruke iz rezultata | Luka | Nije početo | — | — | — |
+| T13 | Verzija B + komponenta za grafikon | Luka | Nije početo | — | — | — |
+| T14 | Scenariji S1–S5 na obe verzije | zajedno | Nije početo | — | — | — |
+| T15 | README | zajedno | Nije početo | — | — | — |
+| T16 | Demo i pisana preporuka (D6) | zajedno | Nije početo | — | — | — |
+| — | Zajednički tipovi `src/core/tipovi.ts` | Luka | Gotovo | `luka/tipovi` | #1 | 2026-11-17 |
+| — | Demo scenariji S1–S6 u `fixtures/` | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
+| — | Podešavanje: CLAUDE.md, podela rada, skillovi | Sara | Gotovo | `sara/podesavanje` | #3 | 2026-11-17 |
+| — | Skillovi za napredak i ekran A, NAPREDAK.md | Sara | U toku | `sara/napredak` | — | 2026-11-17 |
+| — | CI (GitHub Actions: typecheck, test, build) | Sara | Nije početo | — | — | — |
+
+## Sledeći koraci
+1. Sara: T06 ekoNET klijent (`EkonetKlijent`) nad scenarijima iz `fixtures/`.
+2. Luka: T08 LLM korak (`NapraviSavetFn`).
+3. Zajedno: odgovor Maria/Nikole za ekoNET API (T01).
+4. Sara: CI (GitHub Actions) kao mali poseban PR.
+
+## Dnevnik
+### 2026-11-17 – Luka – tipovi i pravila
+- `src/core/tipovi.ts`: zajednički tipovi i potpisi (`EkonetKlijent`, `ProceniFn`, `SatneVrednostiFn`, `NapraviSavetFn`).
+- `src/core/pravila/`: EAQI kategorija, satne vrednosti, provera svežine, testovi (`node --test`).
+- `fixtures/`: scenariji S1–S6 tipa `DemoScenario`.
+
+### 2026-11-17 – Sara – podešavanje
+- Repo prebačen na strukturu `src/core`, `src/server`, `src/ui-a`, `src/ui-b`, `fixtures`, `docs`.
+- Dodati `CLAUDE.md`, `docs/PODELA-RADA.md` i skillovi za Claude Code.
+- Uklonjeni zaostali `main.js` i `server.js` iz korena.
+
+### 2026-11-16 – Sara, Luka – početak
+- Urađen MCP Apps Quickstart, server radi u basic-host-u.
+- Napravljena specifikacija i prva prezentacija.
+
+## Odluke
+| Datum | Odluka | Razlog | Ko |
+|---|---|---|---|
+| 2026-11-17 | Imena domena u kodu na srpskom (`tipovi`, `pravila`, `proceni`), MCP alati i ekoNET funkcije na engleskom | Usklađeno sa Lukinim `tipovi.ts` | zajedno |
+| 2026-11-17 | Ne čekamo API: K1 radi nad `fixtures/` | Da T06 i T09 ne kasne | zajedno |
+| 2026-11-17 | Jedna grana po zadatku, merge samo preko PR-a | `docs/PODELA-RADA.md` | zajedno |
+| 2026-11-17 | Testovi preko `node --test` + tsx (bez Vitest-a) | Već postavljeno u `package.json`, bez dodatne zavisnosti | Luka |
+
+## Otvorena pitanja
+- [ ] URL i autentifikacija ekoNET API-ja, ograničenje poziva?
+- [ ] Koje stanice mere PM2.5 i PM10, koliko često?
+- [ ] Prag svežine (predlog 2 h)?
+- [ ] Kategorija iz satne vrednosti (EAQI 2024) ili 24-časovnog proseka?
+- [ ] LLM za K3 i čiji ključ (predlog: Gemini besplatni nivo)?
+- [ ] Host za demo (basic-host, goose, Claude)?
+- [ ] A2UI katalog v0.9 ili v1.0?
+- [x] ~~Kružna zavisnost u `napraviSavet`~~ – rešeno: ulaz je `Omit<Rezultat, "advice" | "history">` (Luka, `tipovi.ts`).
