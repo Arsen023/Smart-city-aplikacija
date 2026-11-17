@@ -6,6 +6,7 @@ import {
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { registrujA2uiProbu } from "./a2ui-alati.js";
 
 // dist/ je u korenu projekta, dva nivoa iznad src/server/
 const DIST_DIR = path.join(import.meta.dirname, "..", "..", "dist");
@@ -55,5 +56,9 @@ registerAppResource(
     };
   },
 );
+
+  // Verzija B (A2UI) – registracija je u a2ui-alati.ts (Luka)
+  registrujA2uiProbu(server);
+
   return server;
 }
