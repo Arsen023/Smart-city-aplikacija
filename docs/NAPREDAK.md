@@ -11,9 +11,9 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | T03 | A2UI Quickstart | Luka | [proveriti sa Lukom] | — | — | — |
 | T04 | Prezentacija (D1) | zajedno | U toku | — | — | 2026-11-16 |
 | T05 | Stitch skica i tabela mapiranja | Luka | U toku | — | — | 2026-11-16 |
-| T06 | K1 ekoNET klijent + fixtures | Sara | Nije početo | `sara/ekonet` | — | — |
+| T06 | K1 ekoNET klijent + fixtures | Sara | U pregledu | `sara/ekonet` | — | 2026-11-17 |
 | T07 | K2 modul pravila + testovi | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
-| T08 | K3 LLM korak | Luka | Nije početo | — | — | — |
+| T08 | K3 LLM korak (Groq, gpt-oss-120b) | Luka | Gotovo | `luka/llm-savet` | #6 | 2026-11-17 |
 | T09 | K4 MCP server, 4 alata | Sara | Nije početo | `sara/server` | — | — |
 | T10 | Verzija A, 7 elemenata | Sara | Nije početo | `sara/ui-a` | — | — |
 | T11 | Grafikon 24 h u verziji A | Sara | Nije početo | `sara/ui-a` | — | — |
@@ -29,12 +29,18 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | — | CI (GitHub Actions: typecheck, test, build) | Sara | Nije početo | — | — | — |
 
 ## Sledeći koraci
-1. Sara: T06 ekoNET klijent (`EkonetKlijent`) nad scenarijima iz `fixtures/`.
-2. Luka: T08 LLM korak (`NapraviSavetFn`).
-3. Zajedno: odgovor Maria/Nikole za ekoNET API (T01).
-4. Sara: CI (GitHub Actions) kao mali poseban PR.
+1. Luka: pregled PR-a za T06 (`sara/ekonet`).
+2. Sara: T09 MCP server, 4 alata, preko `napraviKlijent()` iz `src/core/ekonet/`.
+3. Luka: `src/server/a2ui.ts` da koristi `ucitajScenario()` iz `src/core/ekonet/`.
+4. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
+5. Sara: CI (GitHub Actions) kao mali poseban PR.
 
 ## Dnevnik
+### 2026-11-17 – Sara – T06
+- `src/core/ekonet/`: demo klijent (`EkonetKlijent`) nad `fixtures/`, Zod šeme, normalizacija (sortiranje, odbacivanje nevažećih vrednosti), `GreskaEkonet`.
+- `napraviKlijent()` bira izvor iz `EKONET_IZVOR` i `EKONET_SCENARIO`; `api` daje grešku dok se ne reši T01.
+- Testovi za K1 i integracioni test K1 → K2 za s1–s6. Plan: `docs/planovi/T06-ekonet.md`.
+
 ### 2026-11-17 – Luka – tipovi i pravila
 - `src/core/tipovi.ts`: zajednički tipovi i potpisi (`EkonetKlijent`, `ProceniFn`, `SatneVrednostiFn`, `NapraviSavetFn`).
 - `src/core/pravila/`: EAQI kategorija, satne vrednosti, provera svežine, testovi (`node --test`).
@@ -56,13 +62,16 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | 2026-11-17 | Ne čekamo API: K1 radi nad `fixtures/` | Da T06 i T09 ne kasne | zajedno |
 | 2026-11-17 | Jedna grana po zadatku, merge samo preko PR-a | `docs/PODELA-RADA.md` | zajedno |
 | 2026-11-17 | Testovi preko `node --test` + tsx (bez Vitest-a) | Već postavljeno u `package.json`, bez dodatne zavisnosti | Luka |
+| 2026-11-17 | K1 bira izvor preko `EKONET_IZVOR` (`demo` podrazumevano, `api` čeka T01) i `EKONET_SCENARIO` | Server ne zavisi od toga da li API postoji; demo uvek isto daje | Sara |
+| 2026-11-17 | Svežinu proverava samo K2; K1 vraća i staro merenje | Jedno mesto za pravilo svežine | Sara |
 
 ## Otvorena pitanja
 - [ ] URL i autentifikacija ekoNET API-ja, ograničenje poziva?
 - [ ] Koje stanice mere PM2.5 i PM10, koliko često?
 - [ ] Prag svežine (predlog 2 h)?
 - [ ] Kategorija iz satne vrednosti (EAQI 2024) ili 24-časovnog proseka?
-- [ ] LLM za K3 i čiji ključ (predlog: Gemini besplatni nivo)?
+- [x] ~~LLM za K3~~ – rešeno: Groq, model gpt-oss-120b (Luka, PR #6). Ključ ide u `.env`.
 - [ ] Host za demo (basic-host, goose, Claude)?
 - [ ] A2UI katalog v0.9 ili v1.0?
+- [ ] `npm start` ne učitava `.env`. Da li dodajemo učitavanje (`main.ts` ili `node --env-file`)? Menja zajednički fajl.
 - [x] ~~Kružna zavisnost u `napraviSavet`~~ – rešeno: ulaz je `Omit<Rezultat, "advice" | "history">` (Luka, `tipovi.ts`).
