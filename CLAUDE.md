@@ -17,9 +17,8 @@ Tim: Sara Živanović, Luka. Mentor: Srđan Krčo.
 npm install          # zavisnosti
 npm start            # build ekrana u watch modu + MCP server na http://localhost:3001/mcp
 npm run build        # produkcijski build
-npm test             # Vitest testovi
-npm run lint         # ESLint
-npm run format       # Prettier
+npm test             # testovi (node --test + tsx), fajlovi *.test.ts
+npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
 ```
 
@@ -57,15 +56,16 @@ Dogovoreni potpisi (menjaju se samo uz dogovor):
 // src/core/ekonet (Sara)
 getStations(): Promise<Stanica[]>
 getLatest(stationId: string): Promise<Merenje[]>
-getHistory(stationId: string, hours?: number): Promise<SatnaVrednost[]>
+getHistory(stationId: string, hours?: number): Promise<Merenje[]>   // sirova merenja; satne vrednosti pravi K2
 
 // src/core/pravila (Luka)
 proceni(merenja: Merenje[], sada: Date): ProcenaPravila
+satneVrednosti(merenja: Merenje[]): SatnaVrednost[]   // za grafikon
 // status ok | stale | no_data, kategorija, određujuća veličina, opis pravila
 
 // src/core/llm (Luka)
-napraviSavet(ulaz: SavetUlaz): Promise<{ savet: string; osnov: string } | null>
-// SavetUlaz = stanica, vreme merenja, vrednosti, kategorija, pravilo (BEZ saveta)
+napraviSavet(rezultat: Omit<Rezultat, "advice" | "history">): Promise<Savet | null>
+// izvor istine za potpise: tipovi EkonetKlijent, ProceniFn, SatneVrednostiFn, NapraviSavetFn u src/core/tipovi.ts
 // null ako LLM nije dostupan ili izlaz ne prođe proveru
 ```
 
@@ -103,11 +103,11 @@ MCP alati: `get_stations`, `get_latest`, `get_history`, `assess_air_quality`.
 
 ## Testovi
 
-- Svaka funkcija u `src/core/pravila/` ima Vitest test, uključujući granice svake kategorije
+- Svaka funkcija u `src/core/pravila/` ima test (`node --test`), uključujući granice svake kategorije
   i statuse `stale`, `no_data`, i slučaj kad postoji samo PM2.5 ili samo PM10.
 - Testovi koriste podatke iz `fixtures/`, nikad pravi API ni pravi LLM.
 - Testovi stoje pored koda: `proceni.ts` → `proceni.test.ts`.
-- Pre nego što kažeš da je zadatak gotov: `npm run typecheck`, `npm run lint` i `npm test` moraju da prođu.
+- Pre nego što kažeš da je zadatak gotov: `npm run typecheck`, `npm test` i `npm run build` moraju da prođu.
 
 ## Git
 

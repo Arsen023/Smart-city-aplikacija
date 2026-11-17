@@ -34,7 +34,7 @@ Cilj: svi alati izgledaju isto, vraćaju dogovoreni format i rade i u hostu bez 
 
 ## Test
 
-- Za svaki alat bar jedan Vitest test koji ga poziva sa podacima iz `fixtures/`
+- Za svaki alat bar jedan test (`node --test`) koji ga poziva sa podacima iz `fixtures/`
   (mock `src/core/ekonet`, mock `src/core/llm`) i proverava `content` i `structuredContent`.
 - Pokrij `ok` i bar jedan od `stale` / `no_data`.
 
