@@ -9,5 +9,5 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"]
   },
-  "include": ["main.ts", "server.ts", "vite.config.ts","src/mcp-app.ts"]
+  "include": ["main.ts", "vite.config.ts", "src/**/*.ts"]
 }

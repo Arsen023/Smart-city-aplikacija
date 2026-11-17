@@ -25,3 +25,5 @@ Thumbs.db
 # Kompajlirani JS u korenu
 /main.js
 /server.js
+# Generisani JS pored TS izvora
+src/**/*.js

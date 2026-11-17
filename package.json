@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "build": "tsc --noEmit && tsc -p tsconfig.server.json && cross-env INPUT=mcp-app.html vite build",
-  "start": "tsx main.ts",
-  "dev": "concurrently \"cross-env INPUT=mcp-app.html vite build --watch\" \"tsx watch main.ts\""
-},
+    "typecheck": "tsc --noEmit",
+    "build:a": "cross-env UI=ui-a vite build",
+    "build": "npm run typecheck && npm run build:a",
+    "start": "tsx main.ts",
+    "dev": "concurrently \"cross-env UI=ui-a NODE_ENV=development vite build --watch\" \"tsx watch main.ts\""
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Arsen023/Smart-city-aplikacija.git"

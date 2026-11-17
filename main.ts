@@ -2,7 +2,7 @@ import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors";
 import type { Request, Response } from "express";
-import { createServer } from "./server.js";
+import { createServer } from "./src/server/server.js";
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
