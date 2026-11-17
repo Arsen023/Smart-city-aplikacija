@@ -11,10 +11,10 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | T03 | A2UI Quickstart | Luka | [proveriti sa Lukom] | — | — | — |
 | T04 | Prezentacija (D1) | zajedno | U toku | — | — | 2026-11-16 |
 | T05 | Stitch skica i tabela mapiranja | Luka | U toku | — | — | 2026-11-16 |
-| T06 | K1 ekoNET klijent + fixtures | Sara | U pregledu | `sara/ekonet` | — | 2026-11-17 |
+| T06 | K1 ekoNET klijent + fixtures | Sara | Gotovo | `sara/ekonet` | #7 | 2026-11-17 |
 | T07 | K2 modul pravila + testovi | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
 | T08 | K3 LLM korak (Groq, gpt-oss-120b) | Luka | Gotovo | `luka/llm-savet` | #6 | 2026-11-17 |
-| T09 | K4 MCP server, 4 alata | Sara | Nije početo | `sara/server` | — | — |
+| T09 | K4 MCP server, 4 alata | Sara | U pregledu | `sara/server` | — | 2026-11-17 |
 | T10 | Verzija A, 7 elemenata | Sara | Nije početo | `sara/ui-a` | — | — |
 | T11 | Grafikon 24 h u verziji A | Sara | Nije početo | `sara/ui-a` | — | — |
 | T12 | A2UI poruke iz rezultata | Luka | Nije početo | — | — | — |
@@ -29,13 +29,19 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | — | CI (GitHub Actions: typecheck, test, build) | Sara | Nije početo | — | — | — |
 
 ## Sledeći koraci
-1. Luka: pregled PR-a za T06 (`sara/ekonet`).
-2. Sara: T09 MCP server, 4 alata, preko `napraviKlijent()` iz `src/core/ekonet/`.
-3. Luka: `src/server/a2ui.ts` da koristi `ucitajScenario()` iz `src/core/ekonet/`.
+1. Luka: pregled PR-a za T09 (`sara/server`), posebno `src/server/server.ts`.
+2. Sara: T10 ekran verzije A nad `Rezultat` iz `assess_air_quality`.
+3. Luka: T12 – A2UI poruke iz `Rezultat` koji vraća `proceniKvalitet()` (`src/server/procena.ts`).
 4. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 5. Sara: CI (GitHub Actions) kao mali poseban PR.
 
 ## Dnevnik
+### 2026-11-17 – Sara – T09
+- `src/server/alati.ts`: alati `get_stations`, `get_latest`, `get_history`, `assess_air_quality` (Zod ulaz, `content` na srpskom za sve statuse, `structuredContent`) i resurs `ui://air/dashboard-a` sa CSP bez spoljnih domena.
+- `src/server/procena.ts`: tok K1 → K2 → K3 (K3 samo za `ok`); greške postaju status `error`, bez izuzetka ka hostu.
+- K1: `napraviIzvor(env)` vraća klijent, `sada` (u demo režimu vreme scenarija) i `llmGreska` (S5). `main.ts` učitava `.env` preko `process.loadEnvFile()`.
+- Uklonjen Quickstart alat `get-time`. Testovi za S1–S5, s6 i sve alate preko `InMemoryTransport`. Plan: `docs/planovi/T09-server.md`.
+
 ### 2026-11-17 – Sara – T06
 - `src/core/ekonet/`: demo klijent (`EkonetKlijent`) nad `fixtures/`, Zod šeme, normalizacija (sortiranje, odbacivanje nevažećih vrednosti), `GreskaEkonet`.
 - `napraviKlijent()` bira izvor iz `EKONET_IZVOR` i `EKONET_SCENARIO`; `api` daje grešku dok se ne reši T01.
@@ -64,6 +70,10 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | 2026-11-17 | Testovi preko `node --test` + tsx (bez Vitest-a) | Već postavljeno u `package.json`, bez dodatne zavisnosti | Luka |
 | 2026-11-17 | K1 bira izvor preko `EKONET_IZVOR` (`demo` podrazumevano, `api` čeka T01) i `EKONET_SCENARIO` | Server ne zavisi od toga da li API postoji; demo uvek isto daje | Sara |
 | 2026-11-17 | Svežinu proverava samo K2; K1 vraća i staro merenje | Jedno mesto za pravilo svežine | Sara |
+| 2026-11-17 | `stationId` u `assess_air_quality` je opcion; bez njega se uzima prva stanica | Demo radi i kad model ne pozove `get_stations` | Sara |
+| 2026-11-17 | `values` su sirova poslednja merenja iz `getLatest`, kategorija iz satnog proseka (K2) | Proverava se ponovo sa pravim API-jem (T01) | Sara |
+| 2026-11-17 | Keš od 5 min (NFR-03) se za sada ne pravi | Čeka pravi API (T01) | Sara |
+| 2026-11-17 | U demo režimu „sada“ je vreme scenarija, ne pravi sat | Demo uvek daje isti rezultat | Sara |
 
 ## Otvorena pitanja
 - [ ] URL i autentifikacija ekoNET API-ja, ograničenje poziva?
@@ -73,5 +83,5 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 - [x] ~~LLM za K3~~ – rešeno: Groq, model gpt-oss-120b (Luka, PR #6). Ključ ide u `.env`.
 - [ ] Host za demo (basic-host, goose, Claude)?
 - [ ] A2UI katalog v0.9 ili v1.0?
-- [ ] `npm start` ne učitava `.env`. Da li dodajemo učitavanje (`main.ts` ili `node --env-file`)? Menja zajednički fajl.
+- [x] ~~`npm start` ne učitava `.env`~~ – rešeno: `main.ts` poziva `process.loadEnvFile()`, bez novog paketa (Sara, T09).
 - [x] ~~Kružna zavisnost u `napraviSavet`~~ – rešeno: ulaz je `Omit<Rezultat, "advice" | "history">` (Luka, `tipovi.ts`).

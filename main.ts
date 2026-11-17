@@ -1,3 +1,13 @@
+// Učitaj .env (Node ugrađeno, bez paketa). Bez .env važe podrazumevane vrednosti (demo, s1-dobar).
+// Napomena: ESM `import`-i ispod se izvrše pre ovog koda, ali nijedan modul ne čita
+// process.env pri učitavanju – samo pri pozivu alata – pa .env stiže na vreme. PORT se čita niže.
+try {
+  process.loadEnvFile();
+} catch (e) {
+  const kod = (e as NodeJS.ErrnoException).code;
+  if (kod !== "ENOENT") console.error(".env nije učitan:", e instanceof Error ? e.message : e);
+}
+
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors";

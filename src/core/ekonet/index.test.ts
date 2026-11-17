@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { GreskaEkonet, napraviKlijent, procitajPodesavanja } from "./index.js";
+import { GreskaEkonet, napraviIzvor, napraviKlijent, procitajPodesavanja } from "./index.js";
 
 const konfiguracija = (e: unknown) => e instanceof GreskaEkonet && e.kod === "konfiguracija";
 
@@ -63,5 +63,30 @@ describe("napraviKlijent", () => {
 
   test("nepoznat izvor odbija pravljenje klijenta", async () => {
     await assert.rejects(napraviKlijent({ EKONET_IZVOR: "nesto" }), konfiguracija);
+  });
+});
+
+
+describe("napraviIzvor", () => {
+  test("demo: sada je vreme scenarija, ne pravi sat", async () => {
+    const izvor = await napraviIzvor({ EKONET_SCENARIO: "s3-zastareo" });
+    assert.equal(izvor.sada().toISOString(), new Date("2026-11-16T09:20:00+01:00").toISOString());
+    assert.equal(izvor.llmGreska, false);
+  });
+
+  test("sada vraća novi Date svaki put (izmena jednog ne menja sledeći)", async () => {
+    const izvor = await napraviIzvor({});
+    const prvi = izvor.sada();
+    prvi.setFullYear(2000);
+    assert.notEqual(izvor.sada().getFullYear(), 2000);
+  });
+
+  test("s5-llm-greska postavlja llmGreska", async () => {
+    const izvor = await napraviIzvor({ EKONET_SCENARIO: "s5-llm-greska" });
+    assert.equal(izvor.llmGreska, true);
+  });
+
+  test("api daje jasnu grešku da T01 nije podešen", async () => {
+    await assert.rejects(napraviIzvor({ EKONET_IZVOR: "api" }), konfiguracija);
   });
 });

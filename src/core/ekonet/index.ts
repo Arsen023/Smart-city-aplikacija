@@ -42,17 +42,38 @@ export function procitajPodesavanja(env: Okruzenje): PodesavanjaEkonet {
   return { izvor: "demo", scenario };
 }
 
-/** Pravi K1 klijent prema podešavanjima iz okruženja. */
-export async function napraviKlijent(env: Okruzenje = process.env): Promise<EkonetKlijent> {
+/** Klijent zajedno sa satom koji uz njega važi. Server (T09) koristi ovo, ne sam klijent. */
+export interface IzvorPodataka {
+  klijent: EkonetKlijent;
+  /** Trenutno vreme za proveru svežine: u demo režimu `scenario.sada`, inače pravi sat. */
+  sada: () => Date;
+  /** Demo scenario traži da LLM poziv ne uspe (S5). Za pravi API uvek `false`. */
+  llmGreska: boolean;
+}
+
+/** Pravi izvor podataka (klijent + sat) prema podešavanjima iz okruženja. */
+export async function napraviIzvor(env: Okruzenje = process.env): Promise<IzvorPodataka> {
   const p = procitajPodesavanja(env);
   if (p.izvor === "api") {
     // TODO T01: pravi HTTP klijent (URL, autentifikacija, Zod šema odgovora, normalizacija).
+    // Tada: sada = () => new Date(), llmGreska = false.
     throw new GreskaEkonet(
       "konfiguracija",
       "EKONET_IZVOR=api još ne radi: pristup ekoNET API-ju (T01) nije podešen. Za sada koristi EKONET_IZVOR=demo.",
     );
   }
-  return napraviDemoKlijent(await ucitajScenario(p.scenario));
+  const scenario = await ucitajScenario(p.scenario);
+  const sadaMs = Date.parse(scenario.sada);
+  return {
+    klijent: napraviDemoKlijent(scenario),
+    sada: () => new Date(sadaMs),
+    llmGreska: scenario.llmGreska === true,
+  };
+}
+
+/** Pravi K1 klijent prema podešavanjima iz okruženja. */
+export async function napraviKlijent(env: Okruzenje = process.env): Promise<EkonetKlijent> {
+  return (await napraviIzvor(env)).klijent;
 }
 
 export { napraviDemoKlijent } from "./demo.js";
