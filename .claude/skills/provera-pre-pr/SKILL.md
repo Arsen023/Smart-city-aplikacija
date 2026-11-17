@@ -13,8 +13,6 @@ Pokreni redom i za svaku grešku predloži ispravku:
 
 ```powershell
 npm run typecheck
-npm run lint
-npm run format:check
 npm test
 npm run build
 ```
@@ -62,7 +60,12 @@ T__ – <naziv iz specifikacije>
 - <zajednički fajlovi koji su dirani, otvorena pitanja>
 ```
 
-## 4. Slanje
+## 4. Napredak
+
+Pre slanja pokreni skill `azuriraj-napredak`: upiši zadatak u `docs/NAPREDAK.md`
+(status "U pregledu", šta je urađeno, odluke, otvorena pitanja) i commit-uj to zajedno sa PR-om.
+
+## 5. Slanje
 
 Predloži, ali ne pokreći bez potvrde:
 

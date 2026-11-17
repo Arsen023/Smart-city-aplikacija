@@ -27,3 +27,6 @@ Thumbs.db
 /server.js
 # Generisani JS pored TS izvora
 src/**/*.js
+
+# Fajlovi koje Claude desktop app ostavlja
+Claude outputs/
