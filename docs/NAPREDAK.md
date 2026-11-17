@@ -13,7 +13,7 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 | T05 | Stitch skica i tabela mapiranja | Luka | U toku | — | — | 2026-11-16 |
 | T06 | K1 ekoNET klijent + fixtures | Sara | U pregledu | `sara/ekonet` | — | 2026-11-17 |
 | T07 | K2 modul pravila + testovi | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
-| T08 | K3 LLM korak | Luka | Nije početo | — | — | — |
+| T08 | K3 LLM korak (Groq, gpt-oss-120b) | Luka | Gotovo | `luka/llm-savet` | #6 | 2026-11-17 |
 | T09 | K4 MCP server, 4 alata | Sara | Nije početo | `sara/server` | — | — |
 | T10 | Verzija A, 7 elemenata | Sara | Nije početo | `sara/ui-a` | — | — |
 | T11 | Grafikon 24 h u verziji A | Sara | Nije početo | `sara/ui-a` | — | — |
@@ -70,7 +70,7 @@ Poslednje ažuriranje: 2026-11-17 (Sara)
 - [ ] Koje stanice mere PM2.5 i PM10, koliko često?
 - [ ] Prag svežine (predlog 2 h)?
 - [ ] Kategorija iz satne vrednosti (EAQI 2024) ili 24-časovnog proseka?
-- [ ] LLM za K3 i čiji ključ (predlog: Gemini besplatni nivo)?
+- [x] ~~LLM za K3~~ – rešeno: Groq, model gpt-oss-120b (Luka, PR #6). Ključ ide u `.env`.
 - [ ] Host za demo (basic-host, goose, Claude)?
 - [ ] A2UI katalog v0.9 ili v1.0?
 - [ ] `npm start` ne učitava `.env`. Da li dodajemo učitavanje (`main.ts` ili `node --env-file`)? Menja zajednički fajl.
