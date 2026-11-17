@@ -1,0 +1,20 @@
+{
+  "id": "s6-bez-podataka",
+  "opis": "Stanica nema nijedno PM merenje",
+  "ocekivano": "Status no_data, bez kategorije i saveta",
+  "sada": "2026-11-16T09:20:00+01:00",
+  "stanica": {
+    "id": "demo-liman",
+    "naziv": "Liman, Novi Sad (demo)",
+    "lokacija": {
+      "lat": 45.2396,
+      "lon": 19.8403,
+      "opis": "Liman, Novi Sad"
+    },
+    "velicine": [
+      "PM2.5",
+      "PM10"
+    ]
+  },
+  "merenja": []
+}
