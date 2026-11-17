@@ -13,9 +13,9 @@ app.ontoolresult = (result) => {
   }
 };
 
-// Klik na dugme ponovo poziva alat "get-time" na serveru
+// Klik na dugme ponovo poziva alat "assess_air_quality" (privremeno, pun ekran dolazi u T10)
 btn.addEventListener("click", async () => {
-  const result = await app.callServerTool({ name: "get-time", arguments: {} });
+  const result = await app.callServerTool({ name: "assess_air_quality", arguments: {} });
   const text = result.content?.find((c) => c.type === "text");
   if (text && "text" in text) {
     timeEl.textContent = text.text;

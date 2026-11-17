@@ -1,61 +1,27 @@
-import {
-  registerAppResource,
-  registerAppTool,
-  RESOURCE_MIME_TYPE,
-} from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { registrujA2uiProbu } from "./a2ui-alati.js";
-
-// dist/ je u korenu projekta, dva nivoa iznad src/server/
-const DIST_DIR = path.join(import.meta.dirname, "..", "..", "dist");
+import { registrujAlate, type DobijZavisnosti } from "./alati.js";
+import { zavisnostiIzOkruzenja, type ZavisnostiProcene } from "./procena.js";
 
 /**
- * Creates a new MCP server instance with tools and resources registered.
+ * Zavisnosti (K1 izvor, sat, K3) se prave jednom po procesu, pri prvom pozivu alata.
+ * Ako podešavanje ne valja (npr. EKONET_IZVOR=api pre T01), alati vraćaju status
+ * "error" sa porukom, a server i dalje radi.
+ */
+let zavisnosti: Promise<ZavisnostiProcene> | undefined;
+const dobijZavisnosti: DobijZavisnosti = () => (zavisnosti ??= zavisnostiIzOkruzenja());
+
+/**
+ * Pravi novu instancu MCP servera sa svim alatima i ui:// resursima.
  */
 export function createServer(): McpServer {
   const server = new McpServer({
-    name: "Quickstart MCP App Server",
+    name: "Smart City – kvalitet vazduha",
     version: "1.0.0",
   });
 
-  // Two-part registration: tool + resource, tied together by the resource URI.
-  const resourceUri = "ui://get-time/mcp-app.html";
-
-  // Register a tool with UI metadata. When the host calls this tool, it reads
-  // `_meta.ui.resourceUri` to know which resource to fetch and render as an
-  // interactive UI.
-  registerAppTool(
-    server,
-    "get-time",
-    {
-      title: "Get Time",
-      description: "Returns the current server time.",
-      inputSchema: {},
-      _meta: { ui: { resourceUri } }, // Links this tool to its UI resource
-    },
-    async () => {
-      const time = new Date().toISOString();
-      return { content: [{ type: "text", text: time }] };
-    },
-  );
-
-  // Register the resource, which returns the bundled HTML/JavaScript for the UI.
-registerAppResource(
-  server,
-  resourceUri,
-  resourceUri,
-  {},
-  async () => {
-    const html = await fs.readFile(path.join(DIST_DIR, "ui-a", "index.html"), "utf-8");
-    return {
-      contents: [
-        { uri: resourceUri, mimeType: RESOURCE_MIME_TYPE, text: html },
-      ],
-    };
-  },
-);
+  // Verzija A i zajednički alati: get_stations, get_latest, get_history, assess_air_quality (Sara, T09)
+  registrujAlate(server, dobijZavisnosti);
 
   // Verzija B (A2UI) – registracija je u a2ui-alati.ts (Luka)
   registrujA2uiProbu(server);
