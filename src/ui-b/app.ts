@@ -55,6 +55,8 @@ const postojeciSurface = new Set<string>();
 
 processor.onSurfaceCreated((surface) => {
   postojeciSurface.add(surface.id);
+  // lit render() ne briše postojeći sadržaj, pa prvo uklanjamo „Učitavanje…“
+  koren.replaceChildren();
   render(html`<a2ui-surface .surface=${surface}></a2ui-surface>`, koren);
 });
 

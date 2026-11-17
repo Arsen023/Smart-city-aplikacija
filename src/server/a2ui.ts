@@ -40,6 +40,19 @@ export interface PodaciZaPrikaz {
   kategorija: string;
   poruka: string;
   pravilo: string;
+  /** Kada je server napravio ove podatke – menja se na svako „Osveži“. */
+  osvezeno: string;
+}
+
+/** Trenutno vreme u Beogradu sa sekundama, npr. "10:12:05". */
+function sadaSaSekundama(): string {
+  return new Intl.DateTimeFormat("sr-Latn", {
+    timeZone: "Europe/Belgrade",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date());
 }
 
 function ucitajScenario(id: DemoScenarioId): DemoScenario {
@@ -68,6 +81,7 @@ export function podaciZaPrikaz(id: DemoScenarioId): PodaciZaPrikaz {
     kategorija: tekstKategorije(p),
     poruka: p.message ?? p.napomena ?? "",
     pravilo: p.rule,
+    osvezeno: sadaSaSekundama(),
   };
 }
 
@@ -87,7 +101,7 @@ function komponente(scenarioId: DemoScenarioId) {
     {
       id: "kolona",
       component: "Column",
-      children: ["naslov", "stanica", "vrednosti", "vreme", "razdelnik", "kategorija", "poruka", "pravilo", "osvezi"],
+      children: ["naslov", "stanica", "vrednosti", "vreme", "razdelnik", "kategorija", "poruka", "pravilo", "osvezi", "osvezeno"],
     },
     { id: "naslov", component: "Text", text: "Kvalitet vazduha", variant: "h2" },
     tekst("stanica", "/stanica", "h4"),
@@ -120,6 +134,12 @@ function komponente(scenarioId: DemoScenarioId) {
       action: { event: { name: "osvezi", context: { scenario: scenarioId } } },
     },
     { id: "osvezi-tekst", component: "Text", text: "Osveži" },
+    {
+      id: "osvezeno",
+      component: "Text",
+      text: { call: "formatString", args: { value: "Osveženo u ${/osvezeno}" }, returnType: "string" },
+      variant: "caption",
+    },
   ];
 }
 
