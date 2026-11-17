@@ -142,6 +142,26 @@ export interface Rezultat {
   napomena: string | null;
 }
 
+// ─── Demo režim (FR-14) ─────────────────────────────────────────────────────
+
+/**
+ * Jedan snimljeni / izmišljeni scenario iz fixtures/.
+ * `sada` je referentno vreme scenarija – koristi se umesto stvarnog sata,
+ * da bi provera svežine uvek davala isti rezultat.
+ */
+export interface DemoScenario {
+  id: string;
+  opis: string;
+  /** Šta specifikacija očekuje (poglavlje 10, scenariji S1–S5). */
+  ocekivano: string;
+  sada: IsoVreme;
+  stanica: Stanica;
+  /** Sva merenja za poslednja 24 h, najnovije na kraju. */
+  merenja: Merenje[];
+  /** Simulira nedostupan LLM (scenario S5). */
+  llmGreska?: boolean;
+}
+
 // ─── Potpisi funkcija između modula ─────────────────────────────────────────
 // Implementacije su u svojim folderima; ovde je samo dogovor šta se poziva.
 
