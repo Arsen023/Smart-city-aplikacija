@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registrujA2uiProbu } from "./a2ui-alati.js";
+import { registrujA2ui } from "./a2ui-alati.js";
 import { registrujAlate, type DobijZavisnosti } from "./alati.js";
 import { zavisnostiIzOkruzenja, type ZavisnostiProcene } from "./procena.js";
 
@@ -23,8 +23,8 @@ export function createServer(): McpServer {
   // Verzija A i zajednički alati: get_stations, get_latest, get_history, assess_air_quality (Sara, T09)
   registrujAlate(server, dobijZavisnosti);
 
-  // Verzija B (A2UI) – registracija je u a2ui-alati.ts (Luka)
-  registrujA2uiProbu(server);
+  // Verzija B (A2UI) – isti tok i zavisnosti kao verzija A; registracija je u a2ui-alati.ts (Luka)
+  registrujA2ui(server, dobijZavisnosti);
 
   return server;
 }
