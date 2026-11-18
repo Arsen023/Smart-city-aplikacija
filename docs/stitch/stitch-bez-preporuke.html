@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+  Izvoz iz Google Stitch-a (18.11.2026), ekran "bez preporuke" (scenario S3).
+  SAMO REFERENCA ZA IZGLED – ne koristi se u aplikaciji. Vidi docs/stitch/procena.md, odeljak 4b:
+  Tailwind sa CDN-a ne radi u MCP App iframe-u (CSP), grafikon je nacrtana kriva, ne podaci.
+-->
+<html lang="sr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Bez preporuke</title>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            appBg: '#F8F9FA',
+            cardBg: '#FFFFFF',
+            accentBlue: '#0284C7',
+            pmBlue: '#0077B6',
+            pmGray: '#CBD5E1',
+            textMain: '#0F172A',
+            textMuted: '#64748B',
+            borderLight: '#F1F5F9'
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="base-typography">
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body class="bg-[#F6F8FA] text-textMain min-h-screen flex justify-center p-0 sm:py-6">
+<!-- BEGIN: MobileContainer -->
+<main class="w-full max-w-[430px] bg-[#F6F8FA] min-h-screen px-4 pt-5 pb-8 flex flex-col space-y-4">
+<!-- BEGIN: HeaderStationSelector -->
+<!-- Location bar and contextual query prompt -->
+<header class="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-1.5" data-purpose="station-header">
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-slate-900 tracking-tight">Liman, Novi Sad</span>
+<svg class="w-5 h-5 text-slate-400 stroke-2" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-500 font-normal leading-relaxed">
+        Da li je sada dobro vreme za šetnju ili trening napolju?
+      </p>
+</header>
+<!-- END: HeaderStationSelector -->
+<!-- BEGIN: MetricCardsGrid -->
+<!-- Side-by-side metric cards for PM2.5 and PM10 -->
+<section class="grid grid-cols-2 gap-3.5 w-full" data-purpose="metrics-grid">
+<!-- PM2.5 Card -->
+<div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between h-[116px]">
+<div class="flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-600">PM2.5</span>
+<svg class="w-5 h-5 text-sky-400/80" fill="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="2.2"></circle>
+<circle cx="12" cy="5" r="1.8"></circle>
+<circle cx="12" cy="19" r="1.8"></circle>
+<circle cx="5" cy="12" r="1.8"></circle>
+<circle cx="19" cy="12" r="1.8"></circle>
+<circle cx="7" cy="7" r="1.4"></circle>
+<circle cx="17" cy="7" r="1.4"></circle>
+<circle cx="7" cy="17" r="1.4"></circle>
+<circle cx="17" cy="17" r="1.4"></circle>
+</svg>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-bold tracking-tight text-slate-900">3.7</span>
+<span class="text-xs text-slate-400 font-medium">µg/m³</span>
+</div>
+</div>
+<!-- PM10 Card -->
+<div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between h-[116px]">
+<div class="flex items-center justify-between">
+<span class="text-sm font-semibold text-slate-600">PM10</span>
+<svg class="w-5 h-5 text-slate-300" fill="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="2.2"></circle>
+<circle cx="12" cy="5" r="1.8"></circle>
+<circle cx="12" cy="19" r="1.8"></circle>
+<circle cx="5" cy="12" r="1.8"></circle>
+<circle cx="19" cy="12" r="1.8"></circle>
+<circle cx="7" cy="7" r="1.4"></circle>
+<circle cx="17" cy="7" r="1.4"></circle>
+<circle cx="7" cy="17" r="1.4"></circle>
+<circle cx="17" cy="17" r="1.4"></circle>
+</svg>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-bold tracking-tight text-slate-900">6.6</span>
+<span class="text-xs text-slate-400 font-medium">µg/m³</span>
+</div>
+</div>
+</section>
+<!-- END: MetricCardsGrid -->
+<!-- BEGIN: TimestampNoticeGroup -->
+<section class="flex flex-col space-y-3" data-purpose="notice-section">
+<!-- Stale measurement pill indicator -->
+<div class="flex items-center">
+<span class="inline-flex items-center text-xs font-medium text-slate-500 bg-slate-200/60 px-3 py-1.5 rounded-full">
+          Merenje: 16.11.2026. 05:00 · pre 4 h
+        </span>
+</div>
+<!-- Single notice banner replacing status/advice -->
+<div class="w-full bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+<p class="text-sm font-medium text-slate-700 leading-relaxed">
+          Poslednje merenje je od 16.11. u 05:00. Ne dajemo preporuku.
+        </p>
+</div>
+</section>
+<!-- END: TimestampNoticeGroup -->
+<!-- BEGIN: TrendChartCard -->
+<!-- 24h Trend Chart ending at 05:00 -->
+<section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col space-y-3" data-purpose="trend-card">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-base font-bold text-slate-900 tracking-tight">Poslednja 24 h</h2>
+<span class="text-xs text-slate-400 font-medium">µg/m³</span>
+</div>
+<!-- Legend for PM2.5 and PM10 -->
+<div class="flex items-center space-x-3 text-xs font-medium text-slate-600">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-1 rounded-full bg-[#0077B6]"></span>
+<span>PM2.5</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-1 rounded-full bg-[#CBD5E1]"></span>
+<span>PM10</span>
+</div>
+</div>
+</div>
+<!-- Line Graph SVG Container -->
+<div class="w-full h-36 pt-1">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 320 120">
+<defs>
+<!-- Gradient for PM2.5 area -->
+<lineargradient id="blueGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#0284C7" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#0284C7" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Subtle horizontal reference gridlines -->
+<line stroke="#F1F5F9" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="320" y1="20" y2="20"></line>
+<line stroke="#F1F5F9" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="320" y1="65" y2="65"></line>
+<line stroke="#F1F5F9" stroke-width="1" x1="0" x2="320" y1="110" y2="110"></line>
+<!-- Filled gradient under PM2.5 curve -->
+<path d="M 0,98 Q 45,95 80,92 T 160,82 T 240,78 L 320,88 L 320,110 L 0,110 Z" fill="url(#blueGradient)"></path>
+<!-- PM10 Line (Gray) -->
+<path d="M 0,84 Q 45,80 80,72 T 160,62 T 240,64 L 320,74" fill="none" stroke="#CBD5E1" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- PM2.5 Line (Blue) -->
+<path d="M 0,98 Q 45,95 80,92 T 160,82 T 240,78 L 320,88" fill="none" stroke="#0077B6" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- End point indicators at 05:00 -->
+<circle cx="320" cy="74" fill="#CBD5E1" r="3.5"></circle>
+<circle cx="320" cy="88" fill="#0077B6" r="3.5"></circle>
+</svg>
+</div>
+<!-- Hour Axis Labels -->
+<div class="flex justify-between text-[11px] font-medium text-slate-400 pt-1">
+<span>05:00</span>
+<span>11:00</span>
+<span>17:00</span>
+<span>23:00</span>
+<span class="text-slate-600 font-semibold">05:00</span>
+</div>
+</section>
+<!-- END: TrendChartCard -->
+<!-- BEGIN: RefreshButton -->
+<!-- Action button to fetch updated measurements -->
+<div class="pt-2 w-full">
+<button class="w-full h-12 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 font-semibold rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-center gap-2 transition duration-150" type="button">
+<svg class="w-4 h-4 text-slate-700 stroke-[2.2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Osveži</span>
+</button>
+</div>
+<!-- END: RefreshButton -->
+</main>
+<!-- END: MobileContainer -->
+</body></html>

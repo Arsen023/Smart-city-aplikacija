@@ -185,3 +185,21 @@ dugme „Osveži“.
 web aplikacije. To potvrđuje zaključak: Stitch je vizuelni predložak, a A2UI za verziju B
 pravi naš server. Opcija **MCP** je zanimljiva za verziju A (agent može da pročita dizajn
 dok pravi HTML), ali to nismo isprobali.
+
+### 4b. HTML kod iz Stitch-a (`stitch-sa-podacima.html`, `stitch-bez-preporuke.html`)
+
+Stitch daje i HTML za svaki ekran. Sačuvan je **samo kao referenca za izgled** (verzija A, T10).
+
+| Provera | Nalaz | Šta znači za nas |
+|---|---|---|
+| Spoljni resursi | Tailwind se učitava sa CDN-a (`cdn.tailwindcss.com`) i radi u browseru u toku izvršavanja. Fontovi i ikonice su lokalni (sistemski font, inline SVG). | **Ne radi u MCP App iframe-u** (CSP bez spoljnih domena). Klase se prepisuju u običan CSS ili se Tailwind ubacuje kroz Vite build (nova zavisnost – po `CLAUDE.md` samo uz obrazloženje). |
+| Podaci | Svi brojevi i tekstovi su upisani ručno (82.9, 149.3, „Loš · nivo 4/6“, savet, osnov). Izmišljenih vrednosti nema. | Šablon – u verziji A vrednosti dolaze iz `Rezultat`-a. |
+| Grafikon | Ručno nacrtane Bezijerove krive (`C`/`Q` putanje), bez osa Y sa brojevima, `preserveAspectRatio="none"` (rasteže krugove). Osa X 00:00–09:00 na ekranu sa podacima (9 h, ne 24 h). | **Nije upotrebljiv sa podacima.** Upotrebljivi su stil (boje linija, gradijent ispod PM2.5, legenda). Crtež iz podataka već postoji: `src/ui-b/komponente/geometrija.ts` (čista funkcija) – može da se premesti u `src/zajednicko/` i koristi u T11. |
+| Izbor stanice | `<span>` + strelica, nije pravi `<select>`/dugme. | Treba pravi kontrolni element (dostupnost, tastatura). |
+| Kontrast (NFR-07: ≥ 4,5:1) | Značka „Loš“ (#991B1B na #FEE2E2): **6,8** ✅. `slate-500` na pozadini: 4,5–4,8 ✅ (granično). **`slate-400`** (jedinice, ose, osnov na ekranu sa podacima): **2,4–2,6** ❌. Pilula sa vremenom na S3: 4,1 ❌. | Sitan sivi tekst potamneti (npr. `slate-600`, 7,6:1). |
+| Pristupačnost, ostalo | Dobro: `role="status"` na znački, `aria-hidden` na ukrasnim ikonicama, `aria-label` na dugmetu. Loše: `user-scalable=no` (zabranjuje uvećanje), `animate-pulse` na tački značke. | Ukloniti `user-scalable=no`; animacija nije potrebna. |
+| Boje kategorije | Sopstvena crvena za „Loš“ (bledo crvena pozadina + tamno crveni tekst). | U obe verzije koristiti zajedničke EAQI boje iz `src/zajednicko/boje-eaqi.ts`, da A i B izgledaju isto. |
+
+**Zaključak za kod:** HTML je dobar **polazni raspored i stil** za verziju A, ali ne može da se
+ubaci kakav jeste: treba ukloniti Tailwind CDN, vezati vrednosti za `Rezultat`, zameniti grafikon
+crtežom iz podataka i popraviti kontrast sitnog teksta. Za verziju B je nebitan (A2UI ne koristi HTML).
