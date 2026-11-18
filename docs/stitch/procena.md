@@ -9,8 +9,8 @@ Zadatak iz specifikacije, poglavlje 8.4:
 
 **Prihvaćeno kada (spec 10, D5):** za svaki element ekrana postoji ocena: da, delimično ili ne.
 
-Status: 🟡 tabela popunjena (T03, T13); skica sa podacima analizirana (odeljak 3);
-čeka se skica stanja bez preporuke i konačan zaključak.
+Status: ✅ tabela (odeljak 2), tri skice analizirane (odeljak 3), zaključak (odeljak 4).
+Jedino otvoreno: koje formate izvoza nudi Stitch (TODO u odeljku 4).
 
 ---
 
@@ -56,10 +56,20 @@ Show:
 No category badge, no advice. Do not add any other numbers or data.
 ```
 
+### 1c. Prompt koji je korišćen za konačne skice
+
+Na kraju je korišćen jedan prompt za oba ekrana (sadržaj kao 1a i 1b, scenariji S2 i S3),
+uz **prvu skicu tima priloženu kao vizuelni uzor** i izričitu listu zabrana:
+bez skale 0–100, pragova, oznaka po veličini, tooltipa, „Uživo“, navigacije, izvora i
+saveta za osetljive grupe; bez izmišljenih brojeva; kategorija čitljiva i bez boje.
+
 Snimke ekrana:
 
-- `docs/stitch/stitch-sa-podacima.png` – ✅ napravljena (skica tima, pre ovog prompta)
-- `docs/stitch/stitch-bez-preporuke.png` – ⏳ čeka
+| Fajl | Šta je | Kako je nastala |
+|---|---|---|
+| `stitch-prva-skica.png` | prva skica tima, sa podacima | slobodan opis, pre ovih promptova |
+| `stitch-sa-podacima.png` | konačna skica, scenario S2 (Loš) | prompt 1c |
+| `stitch-bez-preporuke.png` | konačna skica, scenario S3 (zastareli podaci) | prompt 1c |
 
 ---
 
@@ -69,28 +79,30 @@ Katalog: **A2UI v0.9, osnovni katalog** (`@a2ui/web_core` 0.15) – komponente:
 Text, Image, Icon, Video, AudioPlayer, Row, Column, List, Card, Tabs, Modal, Divider,
 Button, TextField, CheckBox, ChoicePicker, Slider, DateTimeInput.
 
-Kolona „Proba“ kaže da li je element već isproban u T03 (`src/server/a2ui.ts`).
+Ocena se odnosi na **osnovni katalog**. Kolona „U verziji B“ kaže kako je element
+napravljen u T12/T13 (`src/server/a2ui.ts`, `src/ui-b/`, PR #10).
 
-| # | Element ekrana (spec 8.1) | A2UI komponenta | Ocena | Proba | Napomena |
+| # | Element ekrana (spec 8.1) | Osnovni katalog | Ocena | U verziji B | Napomena |
 |---|---|---|---|---|---|
-| 1 | Izbor stanice (naziv i lokacija) | `ChoicePicker` (ili `Button` po stanici) | **da** | ne | Postoji u katalogu; izbor šalje akciju serveru (`callServerTool`), kao „Osveži“. |
-| 2 | Poslednje vrednosti PM2.5 i PM10 sa jedinicama | `Row` + `Text` (`formatString`) | **da** | ✅ | „nije dostupno“ dolazi kao tekst sa servera (FR-04). |
-| 3 | Vreme merenja i koliko je prošlo | `Text` (`formatString`) | **da** | ✅ vreme | „pre 20 min“ računa server i šalje kao tekst; katalog ima i `formatDate`. |
-| 4 | EAQI kategorija sa bojom i nazivom | `Text` u `Card` | **delimično** | ✅ naziv | Naziv radi; **boja ne** – `Text` nema svojstvo boje. Rešenje: sopstvena komponenta (npr. `KategorijaBadge`) u našem katalogu. Naziv je uvek prisutan (NFR-07). |
-| 5 | Grafikon za poslednja 24 h | — | **ne** | ne | Nema grafikona u katalogu. Rešenje: sopstvena komponenta (Zod šema + `A2uiLitElement`) ili rezerva: tabela satnih vrednosti preko `List` + `Row` + `Text`. |
-| 6 | Savet LLM-a | `Text` | **da** | ne | Isti tekst kao u verziji A (FR-13); dolazi iz `napraviSavet`. |
-| 7 | Osnov saveta | `Text` (`variant: caption`) | **da** | ✅ (pravilo) | |
+| 1 | Izbor stanice (naziv i lokacija) | `ChoicePicker` | **da** | ✅ `ChoicePicker` + `Button` „Prikaži“ | `ChoicePicker` nema akciju na promenu, pa izbor šalje dugme (`callServerTool`). |
+| 2 | Poslednje vrednosti PM2.5 i PM10 sa jedinicama | `Row` + `Text` | **da** | ✅ | „nije dostupno“ dolazi kao tekst sa servera (FR-04). Stitch ih prikazuje kao dve kartice – u A2UI dve `Card` u `Row`. |
+| 3 | Vreme merenja i koliko je prošlo | `Text` | **da** | ✅ | „16.11.2026. 09:00 · pre 20 min“ računa server. |
+| 4 | EAQI kategorija sa bojom i nazivom | `Text` | **delimično** | ✅ sopstvena `KategorijaBadge` | `Text` nema boju. Značka: EAQI boja + naziv + nivo, kontrast ≥ 4,5:1 (NFR-07). |
+| 5 | Grafikon za poslednja 24 h | — | **ne** | ✅ sopstveni `Grafikon24h` | Sopstveni SVG, bez biblioteke. Rezerva bez sopstvene komponente: tabela preko `List` + `Row` + `Text`. |
+| 6 | Savet LLM-a | `Text` | **da** | ✅ | Isti savet kao verzija A za isti Rezultat (FR-13). |
+| 7 | Osnov saveta | `Text` (`caption`) | **da** | ✅ | |
 | — | Poruka „bez preporuke“ (stale / no_data) | `Text` | **da** | ✅ | Zamenjuje elemente 4 i 6 (spec 8.1). |
-| — | Dugme „Osveži“ (FR-15) | `Button` + `action.event` | **da** | ✅ | Proba: `osvezi_a2ui` vraća samo `updateDataModel`. |
+| — | Dugme „Osveži“ (FR-15) | `Button` + `action.event` | **da** | ✅ | `osvezi_a2ui` vraća nove komponente i podatke. |
+| — | Ikonice (savet, PM kartice) iz Stitch skice | `Icon` | **delimično** | ne | `Icon` postoji, ali sa ograničenim skupom ikonica; ukras, nije obavezan. |
 
-**Zbir:** 5 od 7 elemenata „da“, 1 „delimično“ (boja kategorije), 1 „ne“ (grafikon).
-Oba nedostatka spec je predvideo (8.3) i rešavaju se sopstvenim komponentama u katalogu (T13).
+**Zbir za 7 elemenata:** 5 „da“, 1 „delimično“ (boja kategorije), 1 „ne“ (grafikon).
+Oba nedostatka spec je predvideo (8.3) i rešena su sopstvenim komponentama u našem katalogu (T13).
 
 ---
 
 ## 3. Šta je Stitch izmislio (ne prenosi se u aplikaciju)
 
-### 3a. Skica sa podacima (`stitch-sa-podacima.png`)
+### 3a. Prva skica tima (`stitch-prva-skica.png`, bez naših ograničenja)
 
 | Šta je Stitch dodao | Zašto se ne prenosi |
 |---|---|
@@ -110,21 +122,56 @@ tačno vreme merenja (ima samo „pre 12 min“) i dugme „Osveži“ (FR-15).
 grafikon 24 h, savet sa ikonicom), značka kategorije sa bojom **i** nazivom, „pre X min“,
 legenda grafikona sa nazivima veličina.
 
-### 3b. Skica bez preporuke
+### 3b. Konačna skica sa podacima (`stitch-sa-podacima.png`, S2)
 
-_Popuniti posle pravljenja skice._
+Stitch je ispoštovao sve elemente i zabrane: tačne vrednosti (82.9 / 149.3 µg/m³), vreme
+„16.11.2026. 09:00 · pre 20 min“, značka „Loš · nivo 4/6“ (boja + naziv), savet, osnov i „Osveži“.
+Nema skale 0–100, pragova, izvora ni navigacije.
+
+| Šta je Stitch ipak dodao ili promenio | Zašto se ne prenosi |
+|---|---|
+| Oblik krivih na grafikonu (rast od 00:00 do 09:00) | Ilustracija – grafikon crta samo naše satne vrednosti. |
+| Osa X 00:00–09:00 pod naslovom „Poslednja 24 h“ | Nedosledno: to je 9 h, ne 24 h. U aplikaciji osa ide 24 h unazad. |
+| Osa Y bez brojeva (samo „µg/m³“) | U aplikaciji osa Y ima vrednosti (0, polovina, maksimum). |
+| Pitanje ispod naziva stanice | Iz prompta; dobra ideja, može kao naslov ekrana. |
+| Ikonica munje uz savet | Ukras; u A2UI `Icon` (delimično), nije obavezno. |
+
+### 3c. Konačna skica bez preporuke (`stitch-bez-preporuke.png`, S3)
+
+Ispravno: nema značke ni saveta, umesto njih poruka „Poslednje merenje je od 16.11. u 05:00.
+Ne dajemo preporuku.“, vreme „pre 4 h“, grafikon se završava u 05:00, osa 05:00–05:00 (24 h),
+dugme „Osveži“.
+
+| Šta je Stitch ipak dodao ili promenio | Zašto se ne prenosi |
+|---|---|
+| Oblik krivih na grafikonu | Ilustracija, kao u 3b. |
+| Dekorativne ikonice u PM karticama | Ukras, nije obavezno. |
+| Osa Y bez brojeva | Kao u 3b. |
+
+### 3d. Šta pokazuje poređenje
+
+- **Bez ograničenja** (3a) Stitch izmišlja mnogo: skalu, pragove, nazive kategorija, izvore,
+  medicinske savete i ekrane van opsega – i to deluje uverljivo.
+- **Sa strogim promptom** (3b, 3c) drži se teksta i brojeva, a izmišlja samo ono što prompt
+  ne može da zada: oblik grafikona i ukrase.
+- Zato je za nas presudno da **brojevi i tekstovi nikad ne dolaze iz skice**, nego iz `Rezultat`-a.
 
 ---
 
 ## 4. Zaključak
 
-_Konačno posle skica. Radna verzija:_
+**Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti.**
 
-- **Vizuelni predložak – da.** Stitch brzo daje raspored i izgled kartica koji možemo
-  preneti u verziju A (HTML/TS) i u raspored A2UI komponenti za verziju B.
-- **Generisanje A2UI komponenti – za sada ne.** Po specifikaciji (8.3) server A2UI poruke
-  pravi **deterministički, bez LLM-a**, iz istog `Rezultat`-a. Izlaz Stitch-a bi i dalje morao
-  ručno da se prevede u A2UI i očisti od izmišljenog sadržaja (odeljak 3).
-  TODO: proveriti u Stitch-u koje formate izvoza nudi i da li neki od njih može direktno u A2UI.
-- **Ograničenje A2UI-ja nije u Stitch-u nego u katalogu:** boja kategorije i grafikon
-  zahtevaju sopstvene komponente bez obzira na to kako je skica napravljena.
+- **Vizuelni predložak – da.** Konačne skice (3b, 3c) imaju tačno naših 7 elemenata i oba stanja.
+  Mogu da služe kao predložak za izgled verzije A (T10) i kao provera rasporeda verzije B.
+- **Generisanje A2UI – ne.** Po specifikaciji (8.3) A2UI poruke pravi server **deterministički,
+  bez LLM-a**, iz istog `Rezultat`-a – to je i urađeno u T12. Izlaz Stitch-a bi i dalje morao ručno
+  da se prevede u A2UI i očisti od izmišljenog sadržaja (3a, 3d). Mapiranje elemenata na komponente
+  (odeljak 2) je jednostavno i već napravljeno ručno.
+- **Ograničenje nije u Stitch-u nego u A2UI katalogu:** boja kategorije i grafikon traže sopstvene
+  komponente bez obzira na to kako je skica napravljena (T13).
+- **Pouka za rad sa Stitch-om:** prompt mora da sadrži prave vrednosti i izričite zabrane, inače
+  skica uvodi pojmove koji nisu iz EAQI-ja (3a).
+
+TODO (Luka): u Stitch-u proveriti meni za izvoz (HTML/CSS, Figma, kod…) i dopisati da li bilo
+koji format može direktno u A2UI JSON. Ne očekuje se da menja zaključak.

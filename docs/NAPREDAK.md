@@ -10,7 +10,7 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 | T02 | MCP Apps Quickstart | Sara | Gotovo | — | — | 2026-11-16 |
 | T03 | A2UI Quickstart (proba verzije B) | Luka | Gotovo | `luka/a2ui-proba` | #4 | 2026-11-17 |
 | T04 | Prezentacija (D1) | zajedno | U toku | — | — | 2026-11-16 |
-| T05 | Stitch skica i tabela mapiranja | Luka | U toku | `luka/napredak-stitch` | #9 (prompt, tabela) | 2026-11-18 |
+| T05 | Stitch skica i tabela mapiranja | Luka | U pregledu | `luka/napredak-stitch` | #9 (prompt, tabela) | 2026-11-18 |
 | T06 | K1 ekoNET klijent + fixtures | Sara | Gotovo | `sara/ekonet` | #7 | 2026-11-17 |
 | T07 | K2 modul pravila + testovi | Luka | Gotovo | `luka/pravila` | #2 | 2026-11-17 |
 | T08 | K3 LLM korak (Groq, gpt-oss-120b) | Luka | Gotovo | `luka/llm-savet` | #6 | 2026-11-17 |
@@ -30,7 +30,7 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 
 ## Sledeći koraci
 1. Sara: T10/T11 ekran verzije A nad `Rezultat` iz `assess_air_quality` (7 elemenata + grafikon).
-2. Luka: T05 – Stitch skica stanja bez preporuke i zaključak u `docs/stitch/procena.md`.
+2. Luka: T05 – proveriti formate izvoza u Stitch-u (TODO u `docs/stitch/procena.md`); skice i zaključak su gotovi.
 3. Zajedno: dogovor o kešu saveta u `src/server/procena.ts` (isti savet u A i B, FR-13; keš 5 min, NFR-03).
 4. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 5. Sara: CI (GitHub Actions) kao mali poseban PR.
@@ -40,7 +40,9 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 - `src/server/a2ui.ts`: A2UI v0.9 poruke iz `Rezultat`-a (ne iz fixtures), deterministički; za `stale` / `no_data` / `error` poruka umesto kategorije i saveta. `assess_air_quality_a2ui` i `osvezi_a2ui` koriste isti `proceniKvalitet` kao verzija A (PR #10).
 - `src/ui-b/`: naš katalog = osnovni v0.9 + `KategorijaBadge` (boja + naziv, kontrast ≥ 4,5:1) + `Grafikon24h` (sopstveni SVG); izbor stanice i „Osveži“. Provereno u basic-host za S1–S4.
 - `server.ts`: jedna linija, `registrujA2ui(server, dobijZavisnosti)`. Ukupno 172 testa.
-- T05: prompt za Stitch i tabela mapiranja (PR #9); analizirana prva Stitch skica (`docs/stitch/stitch-sa-podacima.png`).
+- T05: prompt za Stitch i tabela mapiranja (PR #9). Tri skice u `docs/stitch/`: prva skica tima (bez ograničenja), konačne skice za S2 (sa podacima) i S3 (bez preporuke).
+- T05 nalaz: bez ograničenja Stitch izmišlja skalu 0–100, pragove, izvore i medicinske savete; sa strogim promptom drži se teksta i brojeva, a izmišlja samo oblik grafikona i ukrase.
+- T05 zaključak: Stitch kao vizuelni predložak, ne kao generator A2UI (A2UI pravi server deterministički, spec 8.3).
 
 ### 2026-11-17 – Luka – T03, T08
 - T03: proba verzije B – A2UI renderer (`@a2ui/lit` 0.15) u MCP App iframe-u, „Osveži“ preko `callServerTool` (PR #4).
@@ -90,6 +92,7 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 | 2026-11-17 | LLM: Groq; podrazumevani model `openai/gpt-oss-120b`, menja se preko `GROQ_MODEL` (isproban i `qwen/qwen3.8-27b`) | `llama-3.3-70b-versatile` nije dostupan sa ključem; oba modela prošla proveru | Luka |
 | 2026-11-17 | A2UI protokol v0.9 | Lit renderer `@a2ui/lit` 0.15 podržava v0.9, ne v1.0 | Luka |
 | 2026-11-18 | Kategorija u boji i grafikon kao sopstvene komponente u našem A2UI katalogu | Osnovni katalog nema boju teksta ni grafikon (T05) | Luka |
+| 2026-11-18 | Google Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti | A2UI pravi server deterministički iz `Rezultat`-a (spec 8.3); bez strogog prompta Stitch izmišlja sadržaj (T05) | Luka |
 | 2026-11-18 | Šeme sopstvenih A2UI komponenti preko `zod/v3` | A2UI interno koristi Zod 3; `zod/v3` je deo instaliranog Zod 4, bez novog paketa | Luka |
 
 ## Otvorena pitanja
