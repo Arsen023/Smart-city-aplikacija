@@ -1,0 +1,26 @@
+# Provera na GitHubu za svaki PR i push na main: typecheck, testovi, build verzija A i B.
+# Isto što i skill provera-pre-pr radi lokalno. Ne treba nijedan ključ: testovi rade nad fixtures/.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  provera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Testovi
+        run: npm test
+      - name: Build verzija A i B
+        run: npm run build:a && npm run build:b
