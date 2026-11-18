@@ -9,7 +9,8 @@ Zadatak iz specifikacije, poglavlje 8.4:
 
 **Prihvaćeno kada (spec 10, D5):** za svaki element ekrana postoji ocena: da, delimično ili ne.
 
-Status: 🟡 tabela popunjena na osnovu A2UI probe (T03); skice iz Stitch-a i odeljak 3 čekaju.
+Status: 🟡 tabela popunjena (T03, T13); skica sa podacima analizirana (odeljak 3);
+čeka se skica stanja bez preporuke i konačan zaključak.
 
 ---
 
@@ -55,10 +56,10 @@ Show:
 No category badge, no advice. Do not add any other numbers or data.
 ```
 
-Snimke ekrana sačuvati ovde:
+Snimke ekrana:
 
-- `docs/stitch/stitch-sa-podacima.png`
-- `docs/stitch/stitch-bez-preporuke.png`
+- `docs/stitch/stitch-sa-podacima.png` – ✅ napravljena (skica tima, pre ovog prompta)
+- `docs/stitch/stitch-bez-preporuke.png` – ⏳ čeka
 
 ---
 
@@ -89,14 +90,29 @@ Oba nedostatka spec je predvideo (8.3) i rešavaju se sopstvenim komponentama u 
 
 ## 3. Šta je Stitch izmislio (ne prenosi se u aplikaciju)
 
-_Popuniti posle pravljenja skica._
+### 3a. Skica sa podacima (`stitch-sa-podacima.png`)
 
 | Šta je Stitch dodao | Zašto se ne prenosi |
 |---|---|
-| | |
+| Indeks „34 / 100“ i traka sa 5 podeoka | EAQI nema skalu 0–100 i ima **6** kategorija, ne 5. Prikazujemo samo kategoriju i nivo (npr. „nivo 2/6“). |
+| „Vrlo dobar … Kritičan“, „Dobar (Klasa 2)“ | Nisu EAQI nazivi. Uz to je „Dobar“ nivo 1, a ne 2 – skica je nedosledna sama sa sobom. |
+| „Prag: < 20 µg/m³“ (PM2.5), „Prag: < 40 µg/m³“ (PM10) | Izmišljeni pragovi; naši su iz EEA tabele (PM2.5 „Dobar“ je 0–5). Pravilo 6: pragove ne izmišljamo. |
+| Oznake „Nizak nivo“, „U granicama“ po veličini | Podindeks po veličini ne prikazujemo; kategoriju određuje najlošiji podindeks. |
+| Tekst saveta („…duž Dunavskog keja“, „Osetljive grupe mogu…“, „Provetravanje prostorija preporučeno“) | Savet piše K3 iz naših podataka i prolazi proveru; pominjanje osetljivih grupa je blizu medicinskog saveta (van opsega). |
+| „Kalibrisan po SRPS EN standardu“, „usklađeni sa … SZO“ | Neprovereni izvori i tvrdnje. Kao osnov prikazujemo samo pravilo (EAQI, EEA 2024). |
+| Tooltip „18.2 µg/m³ u 08h“, PM10 linija ispod PM2.5 na mestu gde je PM10 veći | Izmišljena vrednost; grafikon crta samo naše satne vrednosti. |
+| „Uživo“, navigacija Mapa / Istorija / Podešavanja, profil, lokacija | Van opsega (spec 2: jedan ekran, bez mape i naloga). |
 
-Primeri na koje treba paziti: skala 0–100 ili „AQI 156“, sopstveni pragovi, ikonice vremena
-ili temperature, izvori podataka („Izvor: …“), zdravstveni saveti za rizične grupe.
+**Šta skica nema, a spec traži:** osnov saveta (element 7: stanica, vrednosti, vreme, pravilo),
+tačno vreme merenja (ima samo „pre 12 min“) i dugme „Osveži“ (FR-15).
+
+**Šta je dobro i prenosi se:** raspored (izbor stanice gore, kategorija, dve kartice PM2.5/PM10,
+grafikon 24 h, savet sa ikonicom), značka kategorije sa bojom **i** nazivom, „pre X min“,
+legenda grafikona sa nazivima veličina.
+
+### 3b. Skica bez preporuke
+
+_Popuniti posle pravljenja skice._
 
 ---
 
