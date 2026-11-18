@@ -10,7 +10,7 @@
  */
 import type { Rezultat, SatnaVrednost, Stanica } from "../core/tipovi.js";
 import { prikazDatumVreme } from "../core/vreme.js";
-import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../ui-b/katalog-id.js";
+import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../zajednicko/a2ui-katalog.js";
 import { PORUKA_BEZ_SAVETA, tekstVrednosti } from "./procena.js";
 
 export const A2UI_MIME_TYPE = "application/a2ui+json";

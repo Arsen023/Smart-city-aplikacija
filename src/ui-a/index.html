@@ -2,12 +2,154 @@
 <html lang="sr">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart City</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kvalitet vazduha</title>
+  <style>
+    /* Rezervne vrednosti kad host ne pošalje svoje promenljive (applyHostStyleVariables). */
+    :root {
+      color-scheme: light;
+      --r-bg: #ffffff;
+      --r-bg-2: #f4f5f7;
+      --r-text: #1b1d21;
+      --r-text-2: #555b66;
+      --r-border: #d9dce1;
+      --r-warn-bg: #fff4d6;
+      --r-warn-text: #5c4200;
+      --r-danger-text: #8a1c1c;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --r-bg: #1e1f22;
+      --r-bg-2: #2a2c30;
+      --r-text: #ececee;
+      --r-text-2: #a9adb6;
+      --r-border: #3b3e44;
+      --r-warn-bg: #3d3214;
+      --r-warn-text: #f5dd9a;
+      --r-danger-text: #ff9b9b;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--color-background-primary, var(--r-bg));
+      color: var(--color-text-primary, var(--r-text));
+      font-family: var(--font-sans, system-ui, sans-serif);
+      font-size: var(--font-text-md-size, 15px);
+      line-height: var(--font-text-md-line-height, 1.45);
+    }
+
+    #koren { padding: 12px; display: flex; flex-direction: column; gap: 12px; min-height: 260px; }
+
+    header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    h1 {
+      flex: 1 1 auto;
+      margin: 0;
+      font-size: var(--font-heading-sm-size, 17px);
+      line-height: var(--font-heading-sm-line-height, 1.3);
+      font-weight: var(--font-weight-semibold, 600);
+    }
+    .kontrole { display: flex; gap: 8px; align-items: center; }
+
+    select, button {
+      font: inherit;
+      font-size: var(--font-text-sm-size, 14px);
+      color: inherit;
+      background: var(--color-background-secondary, var(--r-bg-2));
+      border: var(--border-width-regular, 1px) solid var(--color-border-primary, var(--r-border));
+      border-radius: var(--border-radius-md, 8px);
+      padding: 6px 10px;
+    }
+    button { cursor: pointer; font-weight: var(--font-weight-medium, 500); }
+    button:disabled, select:disabled { cursor: default; opacity: 0.6; }
+    button:focus-visible, select:focus-visible {
+      outline: 2px solid var(--color-ring-primary, #3b82f6);
+      outline-offset: 2px;
+    }
+
+    .merenje { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+    #vrednosti { list-style: none; margin: 0; padding: 0; display: flex; gap: 16px; flex-wrap: wrap; }
+    #vrednosti li { font-size: var(--font-text-lg-size, 17px); font-weight: var(--font-weight-semibold, 600); }
+    #vreme, .sporedno { color: var(--color-text-secondary, var(--r-text-2)); font-size: var(--font-text-sm-size, 14px); }
+
+    #kategorija {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 10px 14px;
+      border-radius: var(--border-radius-lg, 10px);
+    }
+    #kategorija[hidden] { display: none; }
+    #kategorija-naziv { font-size: var(--font-heading-md-size, 20px); font-weight: var(--font-weight-bold, 700); }
+    #kategorija-opis { font-size: var(--font-text-sm-size, 14px); }
+
+    .poruka {
+      margin: 0;
+      padding: 10px 14px;
+      border-radius: var(--border-radius-md, 8px);
+      background: var(--color-background-warning, var(--r-warn-bg));
+      color: var(--color-text-warning, var(--r-warn-text));
+    }
+    #koren[data-stanje="ucitavanje"] .poruka {
+      background: var(--color-background-secondary, var(--r-bg-2));
+      color: var(--color-text-secondary, var(--r-text-2));
+    }
+    #koren[data-stanje="error"] .poruka {
+      background: var(--color-background-danger, var(--r-bg-2));
+      color: var(--color-text-danger, var(--r-danger-text));
+    }
+
+    #savet-blok {
+      display: flex; flex-direction: column; gap: 4px;
+      border-top: var(--border-width-regular, 1px) solid var(--color-border-secondary, var(--r-border));
+      padding-top: 10px;
+    }
+    #savet-blok[hidden] { display: none; }
+    #savet { margin: 0; font-size: var(--font-text-lg-size, 16px); }
+    #osnov, #pravilo { margin: 0; }
+
+    [hidden] { display: none !important; }
+  </style>
 </head>
 <body>
-  <h1>Smart City</h1>
-  <p id="time">Učitavanje...</p>
-  <button id="btn">Dohvati vreme</button>
+  <main id="koren" data-stanje="ucitavanje" aria-busy="true">
+    <header>
+      <h1 id="naslov">Kvalitet vazduha</h1>
+      <div class="kontrole">
+        <!-- Element 1: izbor stanice -->
+        <label for="izbor" class="sporedno">Stanica</label>
+        <select id="izbor" disabled></select>
+        <button id="osvezi" type="button" disabled>Osveži</button>
+      </div>
+    </header>
+
+    <div id="status" aria-live="polite">
+      <!-- Elementi 2 i 3: vrednosti i vreme merenja -->
+      <div class="merenje">
+        <ul id="vrednosti" hidden></ul>
+        <!-- TODO(T10/zajednicko): „pre X min“ kad protekloVreme() pređe u src/zajednicko/ -->
+        <span id="vreme" hidden></span>
+      </div>
+
+      <!-- Element 4: kategorija, boja + naziv -->
+      <div id="kategorija" hidden>
+        <span id="kategorija-naziv"></span>
+        <span id="kategorija-opis"></span>
+      </div>
+      <p id="napomena" class="sporedno" hidden></p>
+
+      <p id="poruka" class="poruka" role="status">Učitavanje…</p>
+      <button id="pokusaj-ponovo" type="button" hidden>Pokušaj ponovo</button>
+    </div>
+
+    <!-- Element 5: grafikon 24 h. TODO(T11): crtanje iz Rezultat.history, posle odluke o geometrija.ts u src/zajednicko/ -->
+    <section id="grafikon" hidden></section>
+
+    <!-- Elementi 6 i 7: savet i osnov -->
+    <section id="savet-blok" hidden>
+      <p id="savet" hidden></p>
+      <p id="osnov" class="sporedno" hidden></p>
+      <p id="pravilo" class="sporedno" hidden></p>
+    </section>
+  </main>
   <script type="module" src="./app.ts"></script>
 </body>
 </html>

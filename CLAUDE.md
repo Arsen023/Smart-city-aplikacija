@@ -15,8 +15,8 @@ Tim: Sara Živanović, Luka. Mentor: Srđan Krčo.
 
 ```bash
 npm install          # zavisnosti
-npm start            # build ekrana u watch modu + MCP server na http://localhost:3001/mcp
-npm run build        # produkcijski build
+npm start            # samo MCP server na http://localhost:3001/mcp (ekrani iz dist/, prvo npm run build)
+npm run build        # typecheck + build ekrana A i B u dist/ui-a i dist/ui-b
 npm test             # testovi (node --test + tsx), fajlovi *.test.ts
 npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
@@ -41,12 +41,16 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | A2UI poruke | `src/server/a2ui.ts` | Luka | Pretvara `Rezultat` u A2UI poruke za verziju B |
 | Prikaz A | `src/ui-a/` | Sara | `ui://` HTML/TS ekran |
 | Prikaz B | `src/ui-b/` | Luka | A2UI renderer unutar MCP App-a |
+| Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`) |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |
 
 Pravila zavisnosti:
-- `src/ui-a/` i `src/ui-b/` nikad ne uvoze jedno iz drugog. Oba zavise samo od `src/core/tipovi.ts`.
+- `src/ui-a/` i `src/ui-b/` nikad ne uvoze jedno iz drugog. Zavise samo od `src/core/tipovi.ts` i `src/zajednicko/`.
+- Prikazi smeju da uvoze i `src/core/vreme.ts` (čiste funkcije, bez I/O-a).
+- `src/server/` ne uvozi ništa iz `src/ui-*` (zajedničke konstante idu u `src/zajednicko/`).
+- `src/zajednicko/` sadrži samo konstante i čiste funkcije bez DOM-a i I/O-a; ne uvozi iz `src/server/` ni `src/ui-*`.
 - `src/core/` ne uvozi ništa iz `src/server/` ni iz `src/ui-*`.
 - `src/core/pravila/` nema I/O (bez mreže, fajlova i `Date.now()`; vreme dobija kao parametar).
 
