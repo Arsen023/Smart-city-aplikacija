@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="sr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kvalitet vazduha · chat</title>
+    <style>
+      :root {
+        --pozadina: #f6f8fa;
+        --kartica: #ffffff;
+        --tekst: #0f172a;
+        --sporedno: #475569;
+        --ivica: #e2e8f0;
+        --plava: #0369a1;
+        --tamna: #0f172a;
+        --b: #7c3aed;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--pozadina);
+        color: var(--tekst);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      .okvir {
+        max-width: 760px;
+        margin: 0 auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0 16px;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--pozadina);
+        padding: 16px 0 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--ivica);
+      }
+      h1 {
+        font-size: 1.15rem;
+        margin: 0;
+      }
+      .podnaslov {
+        margin: 2px 0 0;
+        font-size: 0.85rem;
+        color: var(--sporedno);
+      }
+      .prekidac {
+        display: inline-flex;
+        background: var(--kartica);
+        border: 1px solid var(--ivica);
+        border-radius: 12px;
+        padding: 3px;
+      }
+      .prekidac input {
+        position: absolute;
+        opacity: 0;
+      }
+      .prekidac label {
+        padding: 6px 12px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--sporedno);
+      }
+      .prekidac input:checked + label {
+        background: var(--tamna);
+        color: #fff;
+      }
+      .prekidac input:focus-visible + label {
+        outline: 2px solid var(--plava);
+      }
+      #razgovor {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px 0;
+      }
+      .poruka {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+      .korisnik {
+        align-self: flex-end;
+        background: var(--tamna);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+      }
+      .asistent {
+        align-self: flex-start;
+        background: var(--kartica);
+        border: 1px solid var(--ivica);
+        border-bottom-left-radius: 4px;
+      }
+      .asistent.greska,
+      .greska {
+        color: #9f1239;
+      }
+      .kuca {
+        color: var(--sporedno);
+      }
+      .razdelnik {
+        align-self: center;
+        max-width: 100%;
+        font-size: 0.8rem;
+        color: var(--sporedno);
+        border-top: 1px solid var(--ivica);
+        padding: 8px 0 0;
+        width: 100%;
+        text-align: center;
+        border-radius: 0;
+      }
+      .ekran-blok {
+        max-width: 100%;
+        width: 100%;
+        padding: 0;
+        white-space: normal;
+      }
+      .oznaka {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 3px 10px;
+        border-radius: 999px;
+        margin-bottom: 6px;
+        color: #fff;
+      }
+      .oznaka-a {
+        background: var(--plava);
+      }
+      .oznaka-b {
+        background: var(--b);
+      }
+      iframe.ekran {
+        width: 100%;
+        height: 420px;
+        border: 1px solid var(--ivica);
+        border-radius: 16px;
+        background: var(--kartica);
+        display: block;
+      }
+      #predlozi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      #predlozi button {
+        border: 1px solid var(--ivica);
+        background: var(--kartica);
+        color: var(--tekst);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      footer {
+        position: sticky;
+        bottom: 0;
+        background: var(--pozadina);
+        padding: 8px 0 16px;
+      }
+      form {
+        display: flex;
+        gap: 8px;
+      }
+      #unos {
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--ivica);
+        font-size: 1rem;
+        background: var(--kartica);
+        color: var(--tekst);
+      }
+      #posalji {
+        padding: 0 18px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--tamna);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+      #posalji:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #status {
+        font-size: 0.75rem;
+        color: var(--sporedno);
+        margin-top: 6px;
+      }
+      #status.greska {
+        color: #9f1239;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="okvir">
+      <header>
+        <div>
+          <h1>Kvalitet vazduha</h1>
+          <p class="podnaslov">Pitajte da li je sada dobro vreme za šetnju ili trening napolju.</p>
+        </div>
+        <div class="prekidac" role="radiogroup" aria-label="Verzija ekrana">
+          <input type="radio" name="verzija" id="verzija-a" value="A" checked />
+          <label for="verzija-a">Verzija A · HTML</label>
+          <input type="radio" name="verzija" id="verzija-b" value="B" />
+          <label for="verzija-b">Verzija B · A2UI</label>
+        </div>
+      </header>
+
+      <main id="razgovor" aria-live="polite"></main>
+
+      <footer>
+        <div id="predlozi" aria-label="Predlozi pitanja">
+          <button type="button">Da li je sad dobro vreme za trčanje na Limanu?</button>
+          <button type="button">Mogu li da izađem u šetnju?</button>
+          <button type="button">Kakav je vazduh u Novom Sadu?</button>
+        </div>
+        <form id="forma">
+          <label for="unos" class="sr-only" hidden>Pitanje</label>
+          <input id="unos" autocomplete="off" placeholder="Napišite pitanje…" />
+          <button id="posalji" type="submit">Pošalji</button>
+        </form>
+        <div id="status" role="status">Povezivanje…</div>
+      </footer>
+    </div>
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

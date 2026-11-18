@@ -39,6 +39,11 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 5. Sara: CI (GitHub Actions) kao mali poseban PR.
 
 ## Dnevnik
+### 2026-11-18 – Luka – chat aplikacija (demo)
+- `src/chat/`: sopstveni MCP host sa chatom. Groq bira alat (`get_stations`, `assess_air_quality` ili `assess_air_quality_a2ui`), ekran A ili B se prikazuje u razgovoru (AppBridge + sandbox na drugom originu), pa AI kratko odgovori.
+- Prekidač „Verzija A · HTML / Verzija B · A2UI“ i oznaka na svakom ekranu, za prezentaciju. `?mcp=` bira MCP server (scenario), `?verzija=B`.
+- Groq ključ samo na chat serveru; chat ne uvozi `src/core` ni `src/server` – sa serverom razgovara samo preko MCP-a. 13 testova.
+
 ### 2026-11-18 – Luka – T12, T13, T05
 - `src/server/a2ui.ts`: A2UI v0.9 poruke iz `Rezultat`-a (ne iz fixtures), deterministički; za `stale` / `no_data` / `error` poruka umesto kategorije i saveta. `assess_air_quality_a2ui` i `osvezi_a2ui` koriste isti `proceniKvalitet` kao verzija A (PR #10).
 - `src/ui-b/`: naš katalog = osnovni v0.9 + `KategorijaBadge` (boja + naziv, kontrast ≥ 4,5:1) + `Grafikon24h` (sopstveni SVG); izbor stanice i „Osveži“. Provereno u basic-host za S1–S4.
@@ -117,6 +122,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | 2026-11-17 | LLM: Groq; podrazumevani model `openai/gpt-oss-120b`, menja se preko `GROQ_MODEL` (isproban i `qwen/qwen3.8-27b`) | `llama-3.3-70b-versatile` nije dostupan sa ključem; oba modela prošla proveru | Luka |
 | 2026-11-17 | A2UI protokol v0.9 | Lit renderer `@a2ui/lit` 0.15 podržava v0.9, ne v1.0 | Luka |
 | 2026-11-18 | Kategorija u boji i grafikon kao sopstvene komponente u našem A2UI katalogu | Osnovni katalog nema boju teksta ni grafikon (T05) | Luka |
+| 2026-11-18 | Demo kroz sopstvenu chat aplikaciju (`src/chat/`), ne kroz Claude/VS Code | Mentor očekuje aplikaciju sa chatom; ne zavisimo od tuđeg naloga. Odstupanje od spec (host je bio npr. Claude) – potvrditi sa mentorom | Luka |
 | 2026-11-18 | Google Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti | A2UI pravi server deterministički iz `Rezultat`-a (spec 8.3); bez strogog prompta Stitch izmišlja sadržaj (T05) | Luka |
 | 2026-11-18 | Šeme sopstvenih A2UI komponenti preko `zod/v3` | A2UI interno koristi Zod 3; `zod/v3` je deo instaliranog Zod 4, bez novog paketa | Luka |
 | 2026-11-18 | `src/zajednicko/` za konstante i čiste funkcije koje dele A, B i server (boje EAQI, ID kataloga) | Isti izgled A i B (NFR-01); server ne uvozi iz `src/ui-*` | zajedno (PR #11) |
