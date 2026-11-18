@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--
+  Izvoz iz Google Stitch-a (18.11.2026), ekran "sa podacima" (scenario S2, Loš).
+  SAMO REFERENCA ZA IZGLED – ne koristi se u aplikaciji. Vidi docs/stitch/procena.md, odeljak 4b:
+  Tailwind sa CDN-a ne radi u MCP App iframe-u (CSP), grafikon je nacrtana kriva, ne podaci.
+-->
+<html lang="sr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Sa podacima</title>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            appBg: '#F8F9FA',
+            badgeBg: '#FEE2E2',
+            badgeText: '#991B1B',
+            badgeDot: '#DC2626',
+            cardBorder: '#F1F3F5',
+            pm25Stroke: '#0284C7',
+            pm10Stroke: '#94A3B8'
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styling">
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #F8F9FA;
+    }
+    .custom-shadow {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+  </style>
+</head>
+<body class="bg-appBg min-h-screen text-slate-800 flex justify-center py-4 px-3 sm:py-8">
+<!-- Mobile screen shell matching iOS screen layout -->
+<main class="w-full max-w-[430px] flex flex-col gap-4 pb-10" data-purpose="mobile-screen-container">
+<!-- BEGIN: HeaderSection -->
+<header class="bg-white rounded-2xl p-4 custom-shadow border border-cardBorder" data-purpose="station-header">
+<div class="flex items-center justify-between cursor-pointer">
+<span class="text-xl font-bold text-slate-900 tracking-tight">Liman, Novi Sad</span>
+<!-- Subtle chevron down icon -->
+<svg aria-hidden="true" class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+</div>
+<p class="mt-2 text-sm font-medium text-slate-500 leading-snug">
+        Da li je sada dobro vreme za šetnju ili trening napolju?
+      </p>
+</header>
+<!-- END: HeaderSection -->
+<!-- BEGIN: MetricsSection -->
+<!-- Two metric cards side by side -->
+<section aria-label="Koncentracije zagađivača" class="grid grid-cols-2 gap-3" data-purpose="metrics-grid">
+<!-- Card 1: PM2.5 -->
+<article class="bg-white rounded-2xl p-4 custom-shadow border border-cardBorder flex flex-col justify-between" data-purpose="metric-card-pm25">
+<span class="text-base font-bold text-slate-800 tracking-tight">PM2.5</span>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-3xl font-extrabold text-slate-900 tracking-tight">82.9</span>
+<span class="text-xs font-semibold text-slate-500">µg/m³</span>
+</div>
+</article>
+<!-- Card 2: PM10 -->
+<article class="bg-white rounded-2xl p-4 custom-shadow border border-cardBorder flex flex-col justify-between" data-purpose="metric-card-pm10">
+<span class="text-base font-bold text-slate-800 tracking-tight">PM10</span>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="text-3xl font-extrabold text-slate-900 tracking-tight">149.3</span>
+<span class="text-xs font-semibold text-slate-500">µg/m³</span>
+</div>
+</article>
+</section>
+<!-- END: MetricsSection -->
+<!-- BEGIN: StatusSection -->
+<!-- Measurement timestamp & Category status badge -->
+<section class="flex flex-col items-center gap-2.5 my-1" data-purpose="timestamp-and-category">
+<!-- Timestamp badge -->
+<div class="px-3.5 py-1 bg-white/80 rounded-full border border-slate-200/80 text-xs font-medium text-slate-500 shadow-sm">
+        Merenje: 16.11.2026. 09:00 · pre 20 min
+      </div>
+<!-- Category status badge (High contrast >= 4.5:1 ratio) -->
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-badgeBg border border-red-200 text-badgeText text-sm font-bold tracking-wide" role="status">
+<span aria-hidden="true" class="w-2.5 h-2.5 rounded-full bg-badgeDot animate-pulse"></span>
+<span>Loš · nivo 4/6</span>
+</div>
+</section>
+<!-- END: StatusSection -->
+<!-- BEGIN: LineChartSection -->
+<!-- Trend chart card for past 24 hours -->
+<section class="bg-white rounded-2xl p-4 custom-shadow border border-cardBorder" data-purpose="trend-chart-card">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Poslednja 24 h</h2>
+<!-- Legend -->
+<div class="flex items-center gap-3 text-xs font-medium text-slate-600">
+<div class="flex items-center gap-1.5">
+<span aria-hidden="true" class="w-2.5 h-1 rounded-full bg-sky-600"></span>
+<span>PM2.5</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span aria-hidden="true" class="w-2.5 h-1 rounded-full bg-slate-400"></span>
+<span>PM10</span>
+</div>
+</div>
+</div>
+<!-- SVG Line Chart Area -->
+<div class="relative w-full h-44" data-purpose="chart-container">
+<svg class="w-full h-full overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 340 140">
+<defs>
+<!-- PM2.5 subtle gradient under curve -->
+<lineargradient id="blueGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#0284C7" stop-opacity="0.18"></stop>
+<stop offset="100%" stop-color="#0284C7" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal Grid Lines -->
+<line stroke="#F1F5F9" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="340" y1="20" y2="20"></line>
+<line stroke="#F1F5F9" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="340" y1="65" y2="65"></line>
+<line stroke="#F1F5F9" stroke-width="1" x1="0" x2="340" y1="110" y2="110"></line>
+<!-- Y-axis subtle label (µg/m³) -->
+<text fill="#94A3B8" font-size="9" font-weight="600" x="0" y="14">µg/m³</text>
+<!-- PM2.5 Filled Area -->
+<path d="M 0 100 C 50 105, 90 95, 140 85 C 190 75, 230 50, 280 40 C 310 35, 330 33, 340 32 L 340 110 L 0 110 Z" fill="url(#blueGradient)"></path>
+<!-- PM10 Line (Grey/Upper Curve) -->
+<path d="M 0 80 C 60 82, 100 70, 150 55 C 200 40, 240 25, 285 18 C 310 14, 330 13, 340 12" fill="none" stroke="#94A3B8" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- PM2.5 Line (Blue/Primary Curve) -->
+<path d="M 0 100 C 50 105, 90 95, 140 85 C 190 75, 230 50, 280 40 C 310 35, 330 33, 340 32" fill="none" stroke="#0284C7" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Current measurement point highlight on PM2.5 -->
+<circle cx="340" cy="32" fill="#0284C7" r="3.5" stroke="#FFFFFF" stroke-width="2"></circle>
+</svg>
+</div>
+<!-- X-axis Time Labels -->
+<div class="flex justify-between items-center text-[11px] font-medium text-slate-400 mt-2 px-1">
+<span>00:00</span>
+<span>04:00</span>
+<span>08:00</span>
+<span class="font-semibold text-slate-700">09:00</span>
+</div>
+</section>
+<!-- END: LineChartSection -->
+<!-- BEGIN: AdviceSection -->
+<!-- Advice card with running/caution contextual icon -->
+<article class="bg-white rounded-2xl p-4 custom-shadow border border-cardBorder flex items-start gap-3.5" data-purpose="activity-advice-card">
+<div aria-hidden="true" class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+<!-- Walking / Activity icon -->
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-sm font-semibold text-slate-800 leading-relaxed pt-0.5">
+        Izbegavajte intenzivne vežbe napolju i birajte laganu šetnju ili trening niskog intenziteta.
+      </p>
+</article>
+<!-- END: AdviceSection -->
+<!-- BEGIN: CaptionSection -->
+<!-- Small caption context text -->
+<p class="text-[11px] text-slate-400 leading-relaxed px-1 text-center sm:text-left" data-purpose="rule-caption">
+      Osnov: Liman, Novi Sad, 16.11.2026. 09:00: PM2.5 82.9 µg/m³, PM10 149.3 µg/m³, kategorija Loš. Pravilo: EAQI (EEA 2024), satne vrednosti, najlošiji podindeks.
+    </p>
+<!-- END: CaptionSection -->
+<!-- BEGIN: RefreshButtonSection -->
+<!-- Prominent action button -->
+<div class="pt-1" data-purpose="refresh-action-container">
+<button aria-label="Osveži merenja" class="w-full h-12 bg-slate-900 active:bg-slate-800 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900" type="button">
+<!-- Sync/Refresh icon -->
+<svg aria-hidden="true" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+<span>Osveži</span>
+</button>
+</div>
+<!-- END: RefreshButtonSection -->
+</main>
+</body></html>
