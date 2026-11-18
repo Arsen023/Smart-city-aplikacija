@@ -10,8 +10,8 @@ import { z } from "zod/v3";
 
 // A2UI šeme kao opšti Zod tip – isti objekti u toku izvršavanja, ali TypeScript ne raspliće duboke tipove.
 const S = CommonSchemas as unknown as Record<"DynamicString" | "DynamicNumber" | "DynamicValue", z.ZodTypeAny>;
-import { KOMPONENTA_KATEGORIJA } from "../katalog-id.js";
-import { bojeKategorije } from "./boje.js";
+import { KOMPONENTA_KATEGORIJA } from "../../zajednicko/a2ui-katalog.js";
+import { bojeKategorije } from "../../zajednicko/boje-eaqi.js";
 
 export const KategorijaApi: ComponentApi = {
   name: KOMPONENTA_KATEGORIJA,

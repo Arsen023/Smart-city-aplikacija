@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { SatnaVrednost } from "../../core/tipovi.js";
-import { bojeKategorije, EAQI_BOJE, kontrast } from "./boje.js";
 import { geometrija, lepaGranica, PODRAZUMEVANE } from "./geometrija.js";
 
 const t = (sat: number, pm25: number | null, pm10: number | null): SatnaVrednost => ({
@@ -54,22 +53,5 @@ describe("grafikon – geometrija", () => {
       g.oznakeX.map((o) => o.tekst),
       ["07", "08", "09"],
     );
-  });
-});
-
-describe("boje kategorija", () => {
-  test("svih 6 nivoa ima boju", () => {
-    for (let n = 1; n <= 6; n++) assert.match(EAQI_BOJE[n], /^#[0-9A-F]{6}$/);
-  });
-
-  test("tekst na boji ima kontrast najmanje 4,5:1 (NFR-07)", () => {
-    for (let n = 1; n <= 6; n++) {
-      const b = bojeKategorije(n);
-      assert.ok(kontrast(b.pozadina, b.tekst) >= 4.5, `nivo ${n}: ${kontrast(b.pozadina, b.tekst).toFixed(2)}`);
-    }
-  });
-
-  test("nepoznat nivo dobija neutralnu boju", () => {
-    assert.equal(bojeKategorije(9).pozadina, "#9E9E9E");
   });
 });
