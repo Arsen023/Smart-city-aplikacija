@@ -48,6 +48,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 
 Pravila zavisnosti:
 - `src/ui-a/` i `src/ui-b/` nikad ne uvoze jedno iz drugog. Zavise samo od `src/core/tipovi.ts` i `src/zajednicko/`.
+- Prikazi smeju da uvoze i `src/core/vreme.ts` (čiste funkcije, bez I/O-a).
 - `src/server/` ne uvozi ništa iz `src/ui-*` (zajedničke konstante idu u `src/zajednicko/`).
 - `src/zajednicko/` sadrži samo konstante i čiste funkcije bez DOM-a i I/O-a; ne uvozi iz `src/server/` ni `src/ui-*`.
 - `src/core/` ne uvozi ništa iz `src/server/` ni iz `src/ui-*`.
