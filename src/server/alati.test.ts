@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { napraviIzvor, type DemoScenarioId } from "../core/ekonet/index.js";
 import type { Savet } from "../core/tipovi.js";
-import { registrujAlate, UI_A_RESOURCE_URI, type DobijZavisnosti } from "./alati.js";
+import { META_SADA, registrujAlate, UI_A_RESOURCE_URI, type DobijZavisnosti } from "./alati.js";
 
 const SAVET: Savet = { savet: "Vazduh je u redu za šetnju.", osnov: "Demo stanica, EAQI." };
 
@@ -108,6 +108,13 @@ describe("MCP alati (demo s1-dobar)", () => {
     assert.ok(sc.category);
     assert.deepEqual(sc.advice, SAVET);
     assert.match(tekstIz(r), new RegExp(`Kategorija: ${sc.category.naziv}`));
+  });
+
+  test("assess_air_quality: „sada“ servera u _meta (za „pre X min“ u ekranu A)", async () => {
+    const r = await pozovi(k, "assess_air_quality", {});
+    const sada = r._meta?.[META_SADA];
+    assert.equal(typeof sada, "string");
+    assert.ok(!Number.isNaN(Date.parse(sada as string)));
   });
 });
 

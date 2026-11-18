@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { SatnaVrednost } from "../../core/tipovi.js";
-import { geometrija, lepaGranica, PODRAZUMEVANE } from "./geometrija.js";
+import { geometrija, lepaGranica, PODRAZUMEVANE } from "../../zajednicko/geometrija.js";
 
 const t = (sat: number, pm25: number | null, pm10: number | null): SatnaVrednost => ({
   vreme: `2026-11-16T${String(sat).padStart(2, "0")}:00:00+01:00`,

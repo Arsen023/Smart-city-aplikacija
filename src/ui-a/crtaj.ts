@@ -1,7 +1,8 @@
 /**
  * Upisuje ModelEkrana u DOM. Samo textContent i hidden – podaci nikad ne idu kroz innerHTML.
  */
-import type { ModelEkrana } from "./prikaz.js";
+import { BOJA_PM10, BOJA_PM25 } from "../zajednicko/geometrija.js";
+import type { ModelEkrana, ModelGrafikona } from "./prikaz.js";
 import type { StanicaZaIzbor } from "./sema.js";
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -17,6 +18,11 @@ export const dom = {
   osvezi: el<HTMLButtonElement>("osvezi"),
   vrednosti: el<HTMLUListElement>("vrednosti"),
   vreme: el("vreme"),
+  grafikon: el("grafikon"),
+  grafikonSvg: document.getElementById("grafikon-svg") as unknown as SVGSVGElement,
+  grafikonPotpis: el("grafikon-potpis"),
+  legPm25: el("leg-pm25"),
+  legPm10: el("leg-pm10"),
   kategorija: el("kategorija"),
   kategorijaNaziv: el("kategorija-naziv"),
   kategorijaOpis: el("kategorija-opis"),
@@ -48,6 +54,7 @@ export function crtaj(m: ModelEkrana): void {
   dom.vrednosti.hidden = m.vrednosti === null;
 
   tekst(dom.vreme, m.vreme);
+  crtajGrafikon(m.grafikon);
 
   dom.kategorija.hidden = m.kategorija === null;
   if (m.kategorija) {
@@ -65,6 +72,46 @@ export function crtaj(m: ModelEkrana): void {
   tekst(dom.osnov, m.osnov);
   tekst(dom.pravilo, m.pravilo);
   dom.savetBlok.hidden = m.savet === null && m.pravilo === null;
+}
+
+const SVG = "http://www.w3.org/2000/svg";
+
+function svgEl(ime: string, atributi: Record<string, string | number>, tekstSadrzaj?: string): SVGElement {
+  const e = document.createElementNS(SVG, ime);
+  for (const [k, v] of Object.entries(atributi)) e.setAttribute(k, String(v));
+  if (tekstSadrzaj !== undefined) e.textContent = tekstSadrzaj;
+  return e;
+}
+
+/** Element 5: isti crtež kao komponenta grafikona u verziji B (geometrija i boje iz src/zajednicko/). */
+function crtajGrafikon(m: ModelGrafikona | null): void {
+  dom.grafikon.hidden = m === null;
+  if (!m) {
+    dom.grafikonSvg.replaceChildren();
+    return;
+  }
+  const { dim: D, g } = m;
+  const dnoX = D.visina - D.dole;
+  const svg = dom.grafikonSvg;
+  svg.setAttribute("viewBox", `0 0 ${D.sirina} ${D.visina}`);
+  svg.setAttribute("aria-label", m.opis);
+
+  const deca: SVGElement[] = [];
+  for (const o of g.oznakeY) {
+    deca.push(svgEl("line", { x1: D.levo, x2: D.sirina - D.desno, y1: o.y, y2: o.y, stroke: "currentColor", "stroke-opacity": 0.15 }));
+    deca.push(svgEl("text", { class: "osa", x: D.levo - 4, y: o.y + 3, "text-anchor": "end" }, o.tekst));
+  }
+  for (const o of g.oznakeX) {
+    deca.push(svgEl("text", { class: "osa", x: o.x, y: dnoX + 14, "text-anchor": "middle" }, `${o.tekst}h`));
+  }
+  if (g.pm10) {
+    deca.push(svgEl("path", { d: g.pm10, fill: "none", stroke: BOJA_PM10, "stroke-width": 2, "stroke-dasharray": "5 3" }));
+  }
+  if (g.pm25) deca.push(svgEl("path", { d: g.pm25, fill: "none", stroke: BOJA_PM25, "stroke-width": 2 }));
+  svg.replaceChildren(...deca);
+  dom.grafikonPotpis.textContent = m.potpis;
+  dom.legPm25.style.setProperty("--b", BOJA_PM25);
+  dom.legPm10.style.setProperty("--b", BOJA_PM10);
 }
 
 /** Popunjava izbor stanice; izabrana je ona koja se prikazuje. */

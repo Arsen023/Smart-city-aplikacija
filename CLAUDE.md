@@ -41,7 +41,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | A2UI poruke | `src/server/a2ui.ts` | Luka | Pretvara `Rezultat` u A2UI poruke za verziju B |
 | Prikaz A | `src/ui-a/` | Sara | `ui://` HTML/TS ekran |
 | Prikaz B | `src/ui-b/` | Luka | A2UI renderer unutar MCP App-a |
-| Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`) |
+| Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |

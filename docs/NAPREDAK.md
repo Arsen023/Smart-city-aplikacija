@@ -16,7 +16,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | T08 | K3 LLM korak (Groq, gpt-oss-120b) | Luka | Gotovo | `luka/llm-savet` | #6 | 2026-11-17 |
 | T09 | K4 MCP server, 4 alata | Sara | Gotovo | `sara/server` | #8 | 2026-11-17 |
 | T10 | Verzija A, 7 elemenata | Sara | U pregledu | `sara/ui-a` | — | 2026-11-18 |
-| T11 | Grafikon 24 h u verziji A | Sara | Nije početo | `sara/ui-a` | — | — |
+| T11 | Grafikon 24 h i „pre X min“ u verziji A | Sara | U pregledu | `sara/ui-a` | — | 2026-11-18 |
 | T12 | A2UI poruke iz rezultata | Luka | Gotovo | `luka/ui-b` | #10 | 2026-11-18 |
 | T13 | Verzija B + komponenta za grafikon | Luka | Gotovo | `luka/ui-b` | #10 | 2026-11-18 |
 | T14 | Scenariji S1–S5 na obe verzije | zajedno | Nije početo | — | — | — |
@@ -27,16 +27,24 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | — | Podešavanje: CLAUDE.md, podela rada, skillovi | Sara | Gotovo | `sara/podesavanje` | #3 | 2026-11-17 |
 | — | Skillovi za napredak i ekran A, NAPREDAK.md | Sara | Gotovo | `sara/napredak` | #5 | 2026-11-17 |
 | — | Zajednički folder `src/zajednicko/` (EAQI boje, ID A2UI kataloga) | Luka | Gotovo | `luka/zajednicko` | #11 | 2026-11-18 |
-| — | CI (GitHub Actions: typecheck, test, build) | Sara | Nije početo | — | — | — |
+| — | CI (GitHub Actions: typecheck, test, build) | Sara | U pregledu | `sara/ci` | — | 2026-11-18 |
 
 ## Sledeći koraci
-1. Luka: pregled PR-a za T10 (`sara/ui-a`), posebno novi red u CLAUDE.md i `src/zajednicko/format.ts`.
-2. Luka: odgovor na predlog da `protekloVreme()` i `geometrija.ts` pređu u `src/zajednicko/` (potrebno za „pre X min“ u T10 i grafikon u T11).
-3. Sara: T11 grafikon 24 h u verziji A, posle odgovora iz tačke 2.
-4. Sara: CI (GitHub Actions: typecheck, test, build) kao mali poseban PR.
-5. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
+1. Luka: pregled PR-a `sara/ui-a` (T10 + T11): novi red u CLAUDE.md, `src/zajednicko/format.ts` i `geometrija.ts`, male izmene u `src/server/a2ui.ts` i `src/ui-b/komponente/grafikon.ts`, `_meta["smartcity/sada"]`.
+2. Luka: pregled PR-a `sara/ci` (GitHub Actions).
+3. Sara: snimci S1–S6 za verziju A u `docs/snimci/` (uputstvo u `docs/snimci/README.md`).
+4. Luka: Stitch skice (`docs/stitch/*.png`) i odeljci 3 i 4 u `procena.md`; isti raspored onda i u A i u B (NFR-01).
+5. Zajedno: T14 (S1–S6 na obe verzije), T15 README, T16 demo i pisana preporuka (D6).
+6. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 
 ## Dnevnik
+### 2026-11-18 – Sara – T11 i CI u pregled
+- Ekran A sada ima svih 7 elemenata: grafikon 24 h (element 5) i „pre X min“ (element 3).
+- `protekloVreme()` → `src/zajednicko/format.ts`, `geometrija.ts` + boje linija → `src/zajednicko/geometrija.ts`; A i B crtaju isto, bez kopije koda. Lukini fajlovi samo menjaju uvoz.
+- Server šalje „sada“ u `_meta["smartcity/sada"]` rezultata `assess_air_quality`, bez izmene `Rezultat`-a. Plan: `docs/planovi/T11-grafikon-a.md`.
+- `.github/workflows/ci.yml`: `npm ci`, typecheck, testovi, build A i B na Node 24 (grana `sara/ci`).
+- 214 testova prolazi.
+
 ### 2026-11-18 – Sara – T10 u pregled
 - `src/ui-a/`: ekran nad `Rezultat`-om, elementi 1, 2, 3 (samo vreme merenja), 4, 6, 7; stanja učitavanje, `ok`, `ok` bez saveta (S5), `stale`, `no_data`, `error`; tema hosta, safe area, „Osveži“, „Pokušaj ponovo“, izbor stanice iz `get_stations`, `updateModelContext`.
 - `sema.ts` (Zod provera `structuredContent`), `prikaz.ts` (čista funkcija, bez DOM-a), `crtaj.ts` (samo `textContent`, bez `innerHTML`).
@@ -90,6 +98,8 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | 2026-11-18 | Prikazi smeju da uvoze `src/core/vreme.ts` (novi red u CLAUDE.md) | Format datuma `16.11.2026. 09:00` na jednom mestu; čiste funkcije bez I/O-a | Sara (čeka potvrdu Luke u PR-u) |
 | 2026-11-18 | `tekstVrednosti()` u `src/zajednicko/format.ts` | Isti tekst vrednosti i „nije dostupno“ u serveru i ekranu A, bez kopije | Sara |
 | 2026-11-18 | T10 ide bez „pre X min“ i grafikona (ostaju TODO) | Čeka se dogovor o premeštanju `protekloVreme()` i `geometrija.ts` u `src/zajednicko/` | Sara |
+| 2026-11-18 | `protekloVreme()` i `geometrija.ts` (sa bojama linija) u `src/zajednicko/` | Isti tekst vremena i isti grafikon u A i B (NFR-01), bez kopije | Sara (čeka potvrdu Luke u PR-u) |
+| 2026-11-18 | „sada“ servera ide ekranu A u `_meta["smartcity/sada"]`, ne u `Rezultat` | `Rezultat` se ne menja bez dogovora; u demo režimu „pre X min“ mora biti od vremena scenarija | Sara |
 
 ## Otvorena pitanja
 - [ ] URL i autentifikacija ekoNET API-ja, ograničenje poziva?
@@ -99,7 +109,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 - [x] ~~LLM za K3~~ – rešeno: Groq, model gpt-oss-120b (Luka, PR #6). Ključ ide u `.env`.
 - [ ] Host za demo (basic-host, goose, Claude)?
 - [ ] A2UI katalog v0.9 ili v1.0? (verzija B za sada radi sa v0.9)
-- [ ] Da li `protekloVreme()` (`src/server/a2ui.ts`) i `geometrija.ts` (`src/ui-b/komponente/`) prelaze u `src/zajednicko/`? (pitanje za Luku)
+- [ ] `protekloVreme()` i `geometrija.ts` premešteni u `src/zajednicko/` u PR-u `sara/ui-a` – Luka potvrđuje u pregledu.
 - [ ] Da li je Luka saglasan sa novim redom u CLAUDE.md: „Prikazi smeju da uvoze i `src/core/vreme.ts`“? (PR za T10)
 - [ ] Boje EAQI kategorija: potvrditi kodove iz zvaničnog EEA izvora (`TODO(EEA)` u `src/zajednicko/boje-eaqi.ts`).
 - [x] ~~`npm start` ne učitava `.env`~~ – rešeno: `main.ts` poziva `process.loadEnvFile()`, bez novog paketa (Sara, T09).
