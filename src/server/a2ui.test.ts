@@ -152,6 +152,53 @@ describe("komponente po statusu", () => {
   });
 });
 
+describe("raspored po Stitch skici", () => {
+  test("S2: zaglavlje, dve kartice PM jedna pored druge, značka, grafikon i savet u karticama", async () => {
+    const { r, stanice, sada } = await rezultat("s2-los");
+    const p = podaciEkrana(r, sada, OSVEZENO);
+    const k = komponente(r, stanice, p) as K[];
+    const po = (id: string) => k.find((x) => x.id === id);
+    assert.equal(po("root")?.component, "Column");
+    assert.deepEqual(po("vrednosti")?.children, ["kartica-pm25", "kartica-pm10"]);
+    assert.equal(po("kartica-pm25")?.weight, 1);
+    assert.equal(po("kartica-pm10")?.weight, 1);
+    for (const id of ["zaglavlje", "grafikon-kartica", "savet-kartica"]) assert.equal(po(id)?.component, "Card");
+    assert.deepEqual(po("kategorija-red")?.children, ["kategorija"]);
+    assert.deepEqual(po("dno")?.children, ["osvezi"]);
+    // redosled kao u skici
+    const telo = po("root")?.children as string[];
+    assert.ok(telo.indexOf("vrednosti") < telo.indexOf("kategorija-red"));
+    assert.ok(telo.indexOf("kategorija-red") < telo.indexOf("grafikon-kartica"));
+    assert.ok(telo.indexOf("grafikon-kartica") < telo.indexOf("savet-kartica"));
+    assert.equal(telo.at(-2), "dno");
+  });
+
+  test("broj i jedinica posebno; S2 zarez kao decimalni separator", async () => {
+    const { r, sada } = await rezultat("s2-los");
+    const p = podaciEkrana(r, sada, OSVEZENO);
+    assert.equal(p.pm25Broj, "82,9");
+    assert.equal(p.pm25Jedinica, "µg/m³");
+    assert.equal(p.pm10Broj, "149,3");
+  });
+
+  test("S4: kartica PM2.5 kaže „nije dostupno“, bez jedinice, nikad 0", async () => {
+    const { r, sada } = await rezultat("s4-bez-pm25");
+    const p = podaciEkrana(r, sada, OSVEZENO);
+    assert.equal(p.pm25Broj, "nije dostupno");
+    assert.equal(p.pm25Jedinica, "");
+  });
+
+  test("S3: kartica sa porukom umesto značke i kartice saveta", async () => {
+    const { r, stanice, sada } = await rezultat("s3-zastareo");
+    const telo = (komponente(r, stanice, podaciEkrana(r, sada, OSVEZENO)) as K[]).find((x) => x.id === "root")
+      ?.children as string[];
+    assert.ok(telo.includes("poruka-kartica"));
+    assert.ok(!telo.includes("kategorija-red"));
+    assert.ok(!telo.includes("savet-kartica"));
+    assert.ok(telo.includes("grafikon-kartica"));
+  });
+});
+
 describe("poruke", () => {
   test("prvo crtanje: createSurface sa našim katalogom, pa komponente i podaci", async () => {
     const { r, stanice, sada } = await rezultat("s1-dobar");
