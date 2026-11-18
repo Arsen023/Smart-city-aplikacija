@@ -9,8 +9,7 @@ Zadatak iz specifikacije, poglavlje 8.4:
 
 **Prihvaćeno kada (spec 10, D5):** za svaki element ekrana postoji ocena: da, delimično ili ne.
 
-Status: ✅ tabela (odeljak 2), tri skice analizirane (odeljak 3), zaključak (odeljak 4).
-Jedino otvoreno: koje formate izvoza nudi Stitch (TODO u odeljku 4).
+Status: ✅ gotovo – tabela (odeljak 2), tri skice (odeljak 3), zaključak i formati izvoza (odeljak 4).
 
 ---
 
@@ -173,5 +172,16 @@ dugme „Osveži“.
 - **Pouka za rad sa Stitch-om:** prompt mora da sadrži prave vrednosti i izričite zabrane, inače
   skica uvodi pojmove koji nisu iz EAQI-ja (3a).
 
-TODO (Luka): u Stitch-u proveriti meni za izvoz (HTML/CSS, Figma, kod…) i dopisati da li bilo
-koji format može direktno u A2UI JSON. Ne očekuje se da menja zaključak.
+### 4a. Formati izvoza iz Stitch-a (provereno 18.11.2026, `stitch-izvoz.png`)
+
+| Format | Šta je | Za nas |
+|---|---|---|
+| AI Studio (preview) | izvoz u Google AI Studio, gde se od dizajna pravi aplikacija | kod aplikacije, ne A2UI |
+| Figma | dizajn u Figmi | vizuelni predložak |
+| MCP | dizajn dostupan alatima i agentima preko MCP-a | mogući predložak za verziju A; nije A2UI |
+| Netlify, Lovable, Bolt (preview) | objava ili nastavak u alatima koji generišu web aplikaciju | kod aplikacije, ne A2UI |
+
+**Nijedan format nije A2UI** (JSON poruke ni katalog komponenti). Svi vode ka slici ili kodu
+web aplikacije. To potvrđuje zaključak: Stitch je vizuelni predložak, a A2UI za verziju B
+pravi naš server. Opcija **MCP** je zanimljiva za verziju A (agent može da pročita dizajn
+dok pravi HTML), ali to nismo isprobali.

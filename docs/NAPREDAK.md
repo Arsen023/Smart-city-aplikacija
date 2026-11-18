@@ -30,7 +30,7 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 
 ## Sledeći koraci
 1. Sara: T10/T11 ekran verzije A nad `Rezultat` iz `assess_air_quality` (7 elemenata + grafikon).
-2. Luka: T05 – proveriti formate izvoza u Stitch-u (TODO u `docs/stitch/procena.md`); skice i zaključak su gotovi.
+2. Luka i Sara: T04 prezentacija – ubaciti Stitch skice i zaključak T05, A2UI v0.9 i sopstvene komponente.
 3. Zajedno: dogovor o kešu saveta u `src/server/procena.ts` (isti savet u A i B, FR-13; keš 5 min, NFR-03).
 4. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 5. Sara: CI (GitHub Actions) kao mali poseban PR.
@@ -43,6 +43,7 @@ Poslednje ažuriranje: 2026-11-18 (Luka)
 - T05: prompt za Stitch i tabela mapiranja (PR #9). Tri skice u `docs/stitch/`: prva skica tima (bez ograničenja), konačne skice za S2 (sa podacima) i S3 (bez preporuke).
 - T05 nalaz: bez ograničenja Stitch izmišlja skalu 0–100, pragove, izvore i medicinske savete; sa strogim promptom drži se teksta i brojeva, a izmišlja samo oblik grafikona i ukrase.
 - T05 zaključak: Stitch kao vizuelni predložak, ne kao generator A2UI (A2UI pravi server deterministički, spec 8.3).
+- T05 izvoz: AI Studio, Figma, MCP, Netlify, Lovable, Bolt – nijedan nije A2UI.
 
 ### 2026-11-17 – Luka – T03, T08
 - T03: proba verzije B – A2UI renderer (`@a2ui/lit` 0.15) u MCP App iframe-u, „Osveži“ preko `callServerTool` (PR #4).
