@@ -16,7 +16,8 @@ Tim: Sara Živanović, Luka. Mentor: Srđan Krčo.
 ```bash
 npm install          # zavisnosti
 npm start            # samo MCP server na http://localhost:3001/mcp (ekrani iz dist/, prvo npm run build)
-npm run build        # typecheck + build ekrana A i B u dist/ui-a i dist/ui-b
+npm run build        # typecheck + build ekrana A i B (dist/ui-a, dist/ui-b) i chat aplikacije (dist/chat, dist/chat-sandbox)
+npm run chat         # chat aplikacija na http://localhost:3010 (treba i npm start; Groq ključ iz .env)
 npm test             # testovi (node --test + tsx), fajlovi *.test.ts
 npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
@@ -24,7 +25,11 @@ npm run typecheck    # tsc bez emitovanja
 
 Ako neka od ovih skripti još ne postoji u `package.json`, reci to i predloži da se doda; ne preskači proveru ćutke.
 
-Test host (u drugom terminalu, iz kloniranog ext-apps repoa, van ovog projekta):
+Chat aplikacija (demo): `npm start` u jednom terminalu, `npm run chat` u drugom → http://localhost:3010.
+Prekidač „Verzija A / B“ bira ekran; `?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario),
+`?verzija=B` otvara odmah verziju B.
+
+Test host za razvoj (u drugom terminalu, iz kloniranog ext-apps repoa, van ovog projekta):
 `cd ext-apps/examples/basic-host && npm start` → http://localhost:8080
 
 Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da rade u PowerShell-u.
@@ -42,6 +47,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | Prikaz A | `src/ui-a/` | Sara | `ui://` HTML/TS ekran |
 | Prikaz B | `src/ui-b/` | Luka | A2UI renderer unutar MCP App-a |
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`) |
+| Chat aplikacija (naš MCP host) | `src/chat/` | Luka | Chat sa Groq-om (`server.ts`, port 3010), stranica sa prekidačem A/B (`ui/`), sandbox za ekrane (`sandbox/`, port 3011). Ne računa ništa: alate poziva na MCP serveru |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |
@@ -53,6 +59,8 @@ Pravila zavisnosti:
 - `src/zajednicko/` sadrži samo konstante i čiste funkcije bez DOM-a i I/O-a; ne uvozi iz `src/server/` ni `src/ui-*`.
 - `src/core/` ne uvozi ništa iz `src/server/` ni iz `src/ui-*`.
 - `src/core/pravila/` nema I/O (bez mreže, fajlova i `Date.now()`; vreme dobija kao parametar).
+- `src/chat/` ne uvozi iz `src/core/`, `src/server/` ni `src/ui-*`: sa serverom razgovara samo preko MCP-a,
+  kao bilo koji host. Chat model ne računa kategoriju – prepričava rezultat alata (pravila 1 i 7).
 
 Dogovoreni potpisi (menjaju se samo uz dogovor):
 

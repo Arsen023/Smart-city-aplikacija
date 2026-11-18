@@ -8,8 +8,10 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "build:a": "cross-env UI=ui-a vite build",
     "build:b": "cross-env UI=ui-b vite build",
-    "build": "npm run typecheck && npm run build:a && npm run build:b",
+    "build:chat": "cross-env UI=chat vite build && cross-env UI=chat-sandbox vite build",
+    "build": "npm run typecheck && npm run build:a && npm run build:b && npm run build:chat",
     "start": "tsx main.ts",
+    "chat": "tsx src/chat/server.ts",
     "dev": "concurrently \"cross-env UI=ui-a NODE_ENV=development vite build --watch\" \"cross-env UI=ui-b NODE_ENV=development vite build --watch\" \"tsx watch main.ts\""
   },
   "repository": {
