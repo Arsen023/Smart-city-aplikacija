@@ -19,6 +19,7 @@ import {
   type Velicina,
 } from "../core/tipovi.js";
 import { prikazDatumVreme } from "../core/vreme.js";
+import { tekstVrednosti } from "../zajednicko/format.js";
 
 const PRACENE: readonly Velicina[] = ["PM2.5", "PM10"];
 const SATI_ISTORIJE = 24;
@@ -173,11 +174,8 @@ export async function proceniKvalitet(z: ZavisnostiProcene, stationId?: string):
 
 // ─── Tekst za content (model i hostovi bez MCP Apps) ───────────────────────
 
-const broj = new Intl.NumberFormat("sr-Latn", { maximumFractionDigits: 1 });
-
-export function tekstVrednosti(v: PoslednjaVrednost): string {
-  return v.vrednost === null ? `${v.velicina} nije dostupno` : `${v.velicina} ${broj.format(v.vrednost)} ${v.jedinica}`;
-}
+// Format vrednosti je zajednički sa ekranom A; ovde se ponovo izvozi da a2ui.ts i alati.ts rade bez izmene.
+export { tekstVrednosti };
 
 /** Kratak tekst na srpskom za svaki status. */
 export function tekstRezultata(r: Rezultat): string {
