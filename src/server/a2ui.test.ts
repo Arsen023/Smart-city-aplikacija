@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { napraviIzvor, type DemoScenarioId } from "../core/ekonet/index.js";
 import type { NapraviSavetFn, Rezultat, Savet } from "../core/tipovi.js";
-import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../ui-b/katalog-id.js";
+import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../zajednicko/a2ui-katalog.js";
 import {
   AKCIJA_IZABERI,
   AKCIJA_OSVEZI,

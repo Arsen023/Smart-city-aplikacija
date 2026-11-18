@@ -1,5 +1,6 @@
 /**
- * Boje EAQI kategorija za verziju B (spec 8.1, element 4).
+ * Boje EAQI kategorija – zajedničke za verziju A i B (spec 8.1, element 4; NFR-01).
+ * Samo konstante i čiste funkcije, bez DOM-a.
  *
  * TODO(EEA): EEA stranica indeksa (https://airindex.eea.europa.eu/AQI/index.html) ne navodi
  * kodove boja u tekstu. Ovo je paleta koja se uobičajeno navodi za EAQI – potvrditi sa
