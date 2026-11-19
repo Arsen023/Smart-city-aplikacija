@@ -12,6 +12,7 @@ import type { PoslednjaVrednost, Rezultat, SatnaVrednost, Stanica } from "../cor
 import { prikazDatumVreme } from "../core/vreme.js";
 import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../zajednicko/a2ui-katalog.js";
 import { protekloVreme } from "../zajednicko/format.js";
+import type { AiRasporedA2ui } from "./a2ui-ai.js";
 import { PORUKA_BEZ_SAVETA, tekstVrednosti } from "./procena.js";
 
 export const A2UI_MIME_TYPE = "application/a2ui+json";
@@ -44,6 +45,8 @@ export interface PodaciEkrana {
   pravilo: string;
   istorija: SatnaVrednost[];
   osvezeno: string;
+  /** Želja korisnika za izgled (AI raspored); prazno = fiksni ekran. „Osveži“ je šalje nazad. */
+  prikaz: string;
 }
 
 // protekloVreme() je premeštena u src/zajednicko/format.ts (T11); izvozi se i odavde, da postojeći uvozi rade.
@@ -80,7 +83,7 @@ function brojIJedinica(r: Rezultat, velicina: "PM2.5" | "PM10"): [string, string
  * @param sada  „sada“ iz zavisnosti (u demo režimu vreme scenarija) – za „pre X min“
  * @param osvezeno stvarno vreme kad je server napravio podatke
  */
-export function podaciEkrana(r: Rezultat, sada: Date, osvezeno: Date = new Date()): PodaciEkrana {
+export function podaciEkrana(r: Rezultat, sada: Date, osvezeno: Date = new Date(), prikaz = ""): PodaciEkrana {
   const ok = r.status === "ok" && r.category !== null;
   const [pm25Broj, pm25Jedinica] = brojIJedinica(r, "PM2.5");
   const [pm10Broj, pm10Jedinica] = brojIJedinica(r, "PM10");
@@ -105,6 +108,7 @@ export function podaciEkrana(r: Rezultat, sada: Date, osvezeno: Date = new Date(
     pravilo: r.rule ? `Pravilo: ${r.rule}` : "",
     istorija: r.history,
     osvezeno: `Osveženo u ${vremeOsvezavanja(osvezeno)}`,
+    prikaz,
   };
 }
 
@@ -198,7 +202,7 @@ export function komponente(r: Rezultat, stanice: Pick<Stanica, "id" | "naziv">[]
       id: "prikazi",
       component: "Button",
       child: "prikazi-tekst",
-      action: { event: { name: AKCIJA_IZABERI, context: { izbor: { path: "/izbor" } } } },
+      action: { event: { name: AKCIJA_IZABERI, context: { izbor: { path: "/izbor" }, prikaz: { path: "/prikaz" } } } },
     },
     { id: "prikazi-tekst", component: "Text", text: "Prikaži" },
 
@@ -250,7 +254,7 @@ export function komponente(r: Rezultat, stanice: Pick<Stanica, "id" | "naziv">[]
       component: "Button",
       child: "osvezi-sadrzaj",
       variant: "primary",
-      action: { event: { name: AKCIJA_OSVEZI, context: { izbor: { path: "/izbor" } } } },
+      action: { event: { name: AKCIJA_OSVEZI, context: { izbor: { path: "/izbor" }, prikaz: { path: "/prikaz" } } } },
     },
     { id: "osvezi-sadrzaj", component: "Row", children: ["osvezi-ikona", "osvezi-tekst"], align: "center", justify: "center" },
     { id: "osvezi-ikona", component: "Icon", name: { svgPath: IKONICA_OSVEZI } },
@@ -285,18 +289,63 @@ export function porukaKreiranja() {
   return { version: A2UI_VERZIJA, createSurface: { surfaceId: SURFACE_ID, catalogId: KATALOG_ID } };
 }
 
-/** Izgled + podaci. Koristi se i za prvo crtanje i za osvežavanje. */
-export function porukeAzuriranja(r: Rezultat, stanice: Pick<Stanica, "id" | "naziv">[], sada: Date, osvezeno?: Date) {
-  const podaci = podaciEkrana(r, sada, osvezeno);
+/** AI raspored (verzija B, po želji korisnika) – vidi a2ui-raspored.ts i a2ui-ai.ts. */
+export interface OpcijeEkrana {
+  osvezeno?: Date;
+  /** Želja korisnika za izgled; čuva se u data modelu da je „Osveži“ pošalje nazad. */
+  prikaz?: string;
+  /** Proveren AI raspored; null/undefined = fiksni ekran. */
+  raspored?: AiRasporedA2ui | null;
+}
+
+/** Delovi fiksnog ekrana koji uvek idu i uz AI raspored: „Osveži“ (FR-15) i vreme osvežavanja. */
+const UVEK = new Set(["dno", "osvezi", "osvezi-sadrzaj", "osvezi-ikona", "osvezi-tekst", "osvezeno-red", "osvezeno"]);
+
+/**
+ * AI raspored + obavezni delovi. AI raspored se koristi samo kad je status "ok": za stale / no_data /
+ * error uvek fiksni ekran sa porukom (FR-09). Ako AI prikaže savet bez osnova, osnov se dodaje (FR-11).
+ */
+export function komponenteSaRasporedom(fiksne: Komponenta[], ai: AiRasporedA2ui): Komponenta[] {
+  const dodatno: Komponenta[] = [];
+  const telo = [ai.koren];
+  if (ai.koristiSavet && !ai.koristiOsnov) {
+    dodatno.push(tekst("ai-osnov-auto", "/osnov", "caption"));
+    telo.push("ai-osnov-auto");
+  }
+  telo.push("dno", "osvezeno-red");
   return [
-    { version: A2UI_VERZIJA, updateComponents: { surfaceId: SURFACE_ID, components: komponente(r, stanice, podaci) } },
+    { id: "root", component: "Column", children: telo },
+    ...ai.komponente,
+    ...dodatno,
+    ...fiksne.filter((k) => UVEK.has(k.id)),
+  ];
+}
+
+/** Izgled + podaci. Koristi se i za prvo crtanje i za osvežavanje. */
+export function porukeAzuriranja(
+  r: Rezultat,
+  stanice: Pick<Stanica, "id" | "naziv">[],
+  sada: Date,
+  opcije: OpcijeEkrana = {},
+) {
+  const podaci = podaciEkrana(r, sada, opcije.osvezeno, opcije.prikaz ?? "");
+  const fiksne = komponente(r, stanice, podaci);
+  const ok = r.status === "ok" && r.category !== null;
+  const components = ok && opcije.raspored ? komponenteSaRasporedom(fiksne, opcije.raspored) : fiksne;
+  return [
+    { version: A2UI_VERZIJA, updateComponents: { surfaceId: SURFACE_ID, components } },
     { version: A2UI_VERZIJA, updateDataModel: { surfaceId: SURFACE_ID, value: podaci } },
   ];
 }
 
 /** Sve poruke za prvo iscrtavanje ekrana. */
-export function porukeEkrana(r: Rezultat, stanice: Pick<Stanica, "id" | "naziv">[], sada: Date, osvezeno?: Date) {
-  return [porukaKreiranja(), ...porukeAzuriranja(r, stanice, sada, osvezeno)];
+export function porukeEkrana(
+  r: Rezultat,
+  stanice: Pick<Stanica, "id" | "naziv">[],
+  sada: Date,
+  opcije: OpcijeEkrana = {},
+) {
+  return [porukaKreiranja(), ...porukeAzuriranja(r, stanice, sada, opcije)];
 }
 
 /** A2UI poruke kao MCP embedded resource u rezultatu alata. */

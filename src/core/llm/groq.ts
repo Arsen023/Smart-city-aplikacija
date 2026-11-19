@@ -26,6 +26,8 @@ export interface GroqOpcije {
   kljuc?: string;
   model?: string;
   timeoutMs?: number;
+  /** Podrazumevano 1024; raspored ekrana (verzija B) traži više. */
+  maxTokena?: number;
 }
 
 /** Pravi funkciju za poziv Groq-a. Baca grešku ako ključ ne postoji, API ne odgovori ili istekne vreme. */
@@ -42,7 +44,7 @@ export function groqPoziv(opcije: GroqOpcije = {}): LlmPoziv {
       body: JSON.stringify({
         model,
         temperature: 0.2,
-        max_tokens: MAX_TOKENA,
+        max_tokens: opcije.maxTokena ?? MAX_TOKENA,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: sistem },

@@ -104,6 +104,13 @@ export function sistemskaPoruka(verzija: Verzija): string {
     "stationId mora biti tačan id iz get_stations (npr. „demo-liman“), nikad naziv stanice.",
     "Ako ne znaš id, prvo pozovi get_stations, ili pozovi procenu bez stationId (tada se koristi prva stanica).",
     "Rezultat alata se korisniku prikazuje kao ekran sa vrednostima, kategorijom, grafikonom i savetom.",
+    ...(verzija === "B"
+      ? [
+          "Ekran verzije B može da se složi po želji korisnika. Ako korisnik kaže KAKO želi da vidi podatke " +
+            "(npr. „samo grafikon“, „samo kategoriju i savet“, „krupno vrednosti“), prosledi tu želju u parametru prikaz, na srpskom, " +
+            "i ponovo pozovi alat. Za obično pitanje o vazduhu ne šalji prikaz.",
+        ]
+      : []),
     "Posle alata odgovori kratko, u 1–2 rečenice, na srpskom jeziku, latinicom, i obraćaj se sa „vi“.",
     "Koristi samo kategoriju, brojeve i savet iz rezultata alata. Kategoriju nikad ne računaš sam i ne izmišljaš brojeve.",
     "Ako rezultat kaže da nema preporuke (zastareli podaci, nema podataka ili greška), prenesi tu poruku i ne daj savet.",

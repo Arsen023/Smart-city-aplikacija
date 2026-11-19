@@ -123,3 +123,10 @@ describe("sistemska poruka i argumenti", () => {
     assert.deepEqual(argumentiPoziva("[1,2]"), {});
   });
 });
+
+describe("sistemska poruka – AI raspored", () => {
+  test("samo verzija B pominje parametar prikaz", () => {
+    assert.match(sistemskaPoruka("B"), /parametru prikaz/);
+    assert.doesNotMatch(sistemskaPoruka("A"), /parametru prikaz/);
+  });
+});
