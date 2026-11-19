@@ -12,6 +12,7 @@
     "build": "npm run typecheck && npm run build:a && npm run build:b && npm run build:chat",
     "start": "tsx main.ts",
     "chat": "tsx src/chat/server.ts",
+    "demo": "npm run build && concurrently -n server,chat -c blue,magenta \"tsx main.ts\" \"tsx src/chat/server.ts\"",
     "dev": "concurrently \"cross-env UI=ui-a NODE_ENV=development vite build --watch\" \"cross-env UI=ui-b NODE_ENV=development vite build --watch\" \"tsx watch main.ts\""
   },
   "repository": {

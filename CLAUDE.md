@@ -18,6 +18,7 @@ npm install          # zavisnosti
 npm start            # samo MCP server na http://localhost:3001/mcp (ekrani iz dist/, prvo npm run build)
 npm run build        # typecheck + build ekrana A i B (dist/ui-a, dist/ui-b) i chat aplikacije (dist/chat, dist/chat-sandbox)
 npm run chat         # chat aplikacija na http://localhost:3010 (treba i npm start; Groq ključ iz .env)
+npm run demo         # sve za demo jednom komandom: build + MCP server (3001) + chat (3010)
 npm test             # testovi (node --test + tsx), fajlovi *.test.ts
 npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
@@ -25,7 +26,7 @@ npm run typecheck    # tsc bez emitovanja
 
 Ako neka od ovih skripti još ne postoji u `package.json`, reci to i predloži da se doda; ne preskači proveru ćutke.
 
-Chat aplikacija (demo): `npm start` u jednom terminalu, `npm run chat` u drugom → http://localhost:3010.
+Chat aplikacija (demo): `npm run demo` → http://localhost:3010 (ili `npm start` i `npm run chat` u dva terminala).
 Prekidač „Verzija A / B“ bira ekran; `?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario),
 `?verzija=B` otvara odmah verziju B.
 
