@@ -57,7 +57,10 @@ async function naAkciju(akcija: ActionPayload) {
   zauzeto = true;
   try {
     const stationId = izabranaStanica(akcija.context);
-    const rezultat = await app.callServerTool({ name: "osvezi_a2ui", arguments: stationId ? { stationId } : {} });
+    // Želja za prikaz (AI raspored) ide nazad serveru, da „Osveži“ zadrži isti izgled.
+    const prikaz = typeof akcija.context.prikaz === "string" && akcija.context.prikaz.trim() ? akcija.context.prikaz : undefined;
+    const argumenti = { ...(stationId ? { stationId } : {}), ...(prikaz ? { prikaz } : {}) };
+    const rezultat = await app.callServerTool({ name: "osvezi_a2ui", arguments: argumenti });
     primeni(rezultat as SadrzajAlata);
   } catch {
     prikaziGresku("Osvežavanje nije uspelo. Pokušajte ponovo.");

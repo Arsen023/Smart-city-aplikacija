@@ -1,6 +1,6 @@
 # Napredak – Smart-city-aplikacija
 
-Poslednje ažuriranje: 2026-11-18 (Sara)
+Poslednje ažuriranje: 2026-11-19 (Luka)
 
 ## Zadaci
 
@@ -29,6 +29,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | — | Zajednički folder `src/zajednicko/` (EAQI boje, ID A2UI kataloga) | Luka | Gotovo | `luka/zajednicko` | #11 | 2026-11-18 |
 | — | CI (GitHub Actions: typecheck, test, build) | Sara | Gotovo | `sara/ci` | #14 | 2026-11-18 |
 | — | Chat aplikacija (sopstveni MCP host, prekidač A/B) za demo | Luka | Gotovo | `luka/chat` | #15 | 2026-11-18 |
+| — | Verzija B: AI raspored po želji korisnika (A2UI iz kataloga) | Luka | U pregledu | `luka/a2ui-ai` | — | 2026-11-19 |
 | — | Snimci ekrana A za S1–S6 (`docs/snimci/`) | Sara | Nije početo | `sara/ui-a` | — | — |
 
 ## Sledeći koraci
@@ -42,6 +43,12 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 8. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 
 ## Dnevnik
+### 2026-11-19 – Luka – verzija B: AI raspored po želji korisnika
+- U chatu (verzija B) korisnik može da kaže kako želi da vidi podatke („samo kategorija i grafikon“, „krupno PM2.5 i PM10, pa savet“); chat model prosleđuje želju u parametru `prikaz`.
+- `src/server/a2ui-raspored.ts`: LLM piše pojednostavljen opis rasporeda (Kolona, Red, Kartica, Tekst, Kategorija, Grafikon, Razdelnik); server ga proverava (samo poznate putanje podataka, bez cifara u tekstu, stablo bez ciklusa, najviše 40 komponenti) i deterministički prevodi u A2UI.
+- `src/server/a2ui-ai.ts`: poziv Groq-a + keš po želji („Osveži“ zadržava izgled bez novog LLM poziva). Ako bilo šta ne uspe → fiksni ekran.
+- Uvek se dodaju „Osveži“ (FR-15) i osnov uz savet (FR-11); za stale/no_data/error uvek fiksni ekran sa porukom (FR-09). 30 novih testova; provereno u chatu sa pravim Groq-om.
+
 ### 2026-11-18 – Sara – T11 i CI u pregled
 - Ekran A sada ima svih 7 elemenata: grafikon 24 h (element 5) i „pre X min“ (element 3).
 - `protekloVreme()` → `src/zajednicko/format.ts`, `geometrija.ts` + boje linija → `src/zajednicko/geometrija.ts`; A i B crtaju isto, bez kopije koda. Lukini fajlovi samo menjaju uvoz.
@@ -122,6 +129,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | 2026-11-17 | LLM: Groq; podrazumevani model `openai/gpt-oss-120b`, menja se preko `GROQ_MODEL` (isproban i `qwen/qwen3.8-27b`) | `llama-3.3-70b-versatile` nije dostupan sa ključem; oba modela prošla proveru | Luka |
 | 2026-11-17 | A2UI protokol v0.9 | Lit renderer `@a2ui/lit` 0.15 podržava v0.9, ne v1.0 | Luka |
 | 2026-11-18 | Kategorija u boji i grafikon kao sopstvene komponente u našem A2UI katalogu | Osnovni katalog nema boju teksta ni grafikon (T05) | Luka |
+| 2026-11-19 | Verzija B dobija i AI raspored po želji korisnika (pored fiksnog ekrana) | Pokazuje glavnu razliku mehanizma: LLM sastavlja ekran od dozvoljenih komponenti bez izvršavanja koda – u verziji A to bezbedno ne može. Odstupanje od spec 8.3 (bez LLM-a) samo za raspored; podaci i kategorija i dalje samo sa servera | Luka |
 | 2026-11-18 | Demo kroz sopstvenu chat aplikaciju (`src/chat/`), ne kroz Claude/VS Code | Mentor očekuje aplikaciju sa chatom; ne zavisimo od tuđeg naloga. Odstupanje od spec (host je bio npr. Claude) – potvrditi sa mentorom | Luka |
 | 2026-11-18 | Google Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti | A2UI pravi server deterministički iz `Rezultat`-a (spec 8.3); bez strogog prompta Stitch izmišlja sadržaj (T05) | Luka |
 | 2026-11-18 | Šeme sopstvenih A2UI komponenti preko `zod/v3` | A2UI interno koristi Zod 3; `zod/v3` je deo instaliranog Zod 4, bez novog paketa | Luka |

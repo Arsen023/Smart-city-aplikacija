@@ -7,11 +7,13 @@ import {
   AKCIJA_IZABERI,
   AKCIJA_OSVEZI,
   komponente,
+  komponenteSaRasporedom,
   podaciEkrana,
   porukeAzuriranja,
   porukeEkrana,
   protekloVreme,
 } from "./a2ui.js";
+import { proveriRaspored } from "./a2ui-raspored.js";
 import { PORUKA_BEZ_SAVETA, proceniKvalitet, rezultatGreske } from "./procena.js";
 
 const tiho = () => {};
@@ -148,7 +150,7 @@ describe("komponente po statusu", () => {
     const akcija = (id: string) => (k.find((x) => x.id === id)?.action as { event: { name: string; context: unknown } }).event;
     assert.equal(akcija("prikazi").name, AKCIJA_IZABERI);
     assert.equal(akcija("osvezi").name, AKCIJA_OSVEZI);
-    assert.deepEqual(akcija("osvezi").context, { izbor: { path: "/izbor" } });
+    assert.deepEqual(akcija("osvezi").context, { izbor: { path: "/izbor" }, prikaz: { path: "/prikaz" } });
   });
 });
 
@@ -202,7 +204,7 @@ describe("raspored po Stitch skici", () => {
 describe("poruke", () => {
   test("prvo crtanje: createSurface sa našim katalogom, pa komponente i podaci", async () => {
     const { r, stanice, sada } = await rezultat("s1-dobar");
-    const p = porukeEkrana(r, stanice, sada, OSVEZENO) as Array<Record<string, { catalogId?: string }>>;
+    const p = porukeEkrana(r, stanice, sada, { osvezeno: OSVEZENO }) as Array<Record<string, { catalogId?: string }>>;
     assert.equal(p.length, 3);
     assert.equal(p[0].createSurface.catalogId, KATALOG_ID);
     assert.ok("updateComponents" in p[1]);
@@ -211,19 +213,81 @@ describe("poruke", () => {
 
   test("osvežavanje: bez createSurface", async () => {
     const { r, stanice, sada } = await rezultat("s1-dobar");
-    const p = porukeAzuriranja(r, stanice, sada, OSVEZENO);
+    const p = porukeAzuriranja(r, stanice, sada, { osvezeno: OSVEZENO });
     assert.equal(p.length, 2);
     assert.ok(!p.some((x) => "createSurface" in x));
   });
 
   test("isti Rezultat → iste poruke (deterministički, spec 8.3)", async () => {
     const { r, stanice, sada } = await rezultat("s2-los");
-    assert.deepEqual(porukeEkrana(r, stanice, sada, OSVEZENO), porukeEkrana(r, stanice, sada, OSVEZENO));
+    assert.deepEqual(porukeEkrana(r, stanice, sada, { osvezeno: OSVEZENO }), porukeEkrana(r, stanice, sada, { osvezeno: OSVEZENO }));
   });
 
   test("u porukama nema brojeva koji nisu iz Rezultat-a za kategoriju", async () => {
     const { r, stanice, sada } = await rezultat("s1-dobar");
-    const tekst = JSON.stringify(porukeEkrana(r, stanice, sada, OSVEZENO));
+    const tekst = JSON.stringify(porukeEkrana(r, stanice, sada, { osvezeno: OSVEZENO }));
     assert.ok(tekst.includes(`"nivo":${(r as Rezultat).category?.nivo}`));
+  });
+});
+
+// ─── AI raspored (verzija B po želji korisnika) ─────────────────────────────
+
+
+function aiRaspored(opis: unknown) {
+  const r = proveriRaspored(opis);
+  if (!r.ok) throw new Error(r.razlog);
+  return r;
+}
+
+const SAMO_SAVET = aiRaspored({
+  koren: "k",
+  komponente: [
+    { id: "k", tip: "Kolona", deca: ["kat", "s"] },
+    { id: "kat", tip: "Kategorija" },
+    { id: "s", tip: "Tekst", podatak: "/savet" },
+  ],
+});
+
+describe("AI raspored u porukama", () => {
+  test("ok: AI raspored + Osveži; savet bez osnova dobija osnov (FR-11, FR-15)", async () => {
+    const { r, stanice, sada } = await rezultat("s2-los");
+    const p = porukeAzuriranja(r, stanice, sada, { osvezeno: OSVEZENO, prikaz: "kategorija i savet", raspored: SAMO_SAVET });
+    const k = (p[0] as { updateComponents: { components: K[] } }).updateComponents.components;
+    proveriReference(k);
+    const root = k.find((x) => x.id === "root");
+    assert.deepEqual(root?.children, ["ai-k", "ai-osnov-auto", "dno", "osvezeno-red"]);
+    assert.ok(k.some((x) => x.id === "osvezi"));
+    assert.ok(!k.some((x) => x.id === "grafikon-kartica"), "fiksni delovi koje AI nije izabrao ne idu");
+    const podaci = (p[1] as { updateDataModel: { value: { prikaz: string } } }).updateDataModel.value;
+    assert.equal(podaci.prikaz, "kategorija i savet");
+  });
+
+  test("stale: uvek fiksni ekran sa porukom, i kad postoji AI raspored (FR-09)", async () => {
+    const { r, stanice, sada } = await rezultat("s3-zastareo");
+    const p = porukeAzuriranja(r, stanice, sada, { osvezeno: OSVEZENO, prikaz: "samo savet", raspored: SAMO_SAVET });
+    const ids = (p[0] as { updateComponents: { components: K[] } }).updateComponents.components.map((x) => x.id);
+    assert.ok(ids.includes("poruka-kartica"));
+    assert.ok(!ids.some((id) => id.startsWith("ai-")));
+  });
+
+  test("bez rasporeda: fiksni ekran kao i do sada", async () => {
+    const { r, stanice, sada } = await rezultat("s1-dobar");
+    const sa = porukeAzuriranja(r, stanice, sada, { osvezeno: OSVEZENO });
+    const k = (sa[0] as { updateComponents: { components: K[] } }).updateComponents.components;
+    assert.deepEqual(k, komponente(r, stanice, podaciEkrana(r, sada, OSVEZENO)));
+  });
+
+  test("savet sa osnovom: osnov se ne dodaje dvaput", async () => {
+    const { r, stanice, sada } = await rezultat("s1-dobar");
+    const sa = aiRaspored({
+      koren: "k",
+      komponente: [
+        { id: "k", tip: "Kolona", deca: ["s", "o"] },
+        { id: "s", tip: "Tekst", podatak: "/savet" },
+        { id: "o", tip: "Tekst", podatak: "/osnov", stil: "caption" },
+      ],
+    });
+    const k = komponenteSaRasporedom(komponente(r, stanice, podaciEkrana(r, sada, OSVEZENO)), sa) as K[];
+    assert.ok(!k.some((x) => x.id === "ai-osnov-auto"));
   });
 });

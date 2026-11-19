@@ -109,7 +109,9 @@ app.post("/api/chat", async (req: Request, res: Response) => {
 
   const pocetak = Date.now();
   try {
-    // Model ponekad pogrešno sroči poziv alata (Groq: 400 tool_use_failed) – tada jednom ponovo.
+    // Ponovni pokušaj (najviše jednom):
+    // - 400 tool_use_failed: model je pogrešno sročio poziv alata;
+    // - 429 rate_limit_exceeded: besplatni Groq nivo – sačekaj koliko Groq kaže (najviše 4 s).
     let odgovor: globalThis.Response | undefined;
     for (let pokusaj = 1; pokusaj <= 2; pokusaj++) {
       odgovor = await fetch(GROQ_URL, {
@@ -125,6 +127,11 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         .then((t: { error?: { code?: string } }) => t.error?.code)
         .catch(() => undefined);
       console.error(`[chat] Groq HTTP ${odgovor.status}${kod ? ` (${kod})` : ""} posle ${Date.now() - pocetak} ms, pokušaj ${pokusaj}`);
+      if (odgovor.status === 429 && pokusaj === 1) {
+        const sekundi = Number.parseFloat(odgovor.headers.get("retry-after") ?? "2");
+        await new Promise((r) => setTimeout(r, Math.min(Number.isFinite(sekundi) ? sekundi : 2, 4) * 1000));
+        continue;
+      }
       if (kod !== "tool_use_failed") break;
     }
     if (!odgovor?.ok) {

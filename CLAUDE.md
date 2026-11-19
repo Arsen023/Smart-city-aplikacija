@@ -44,6 +44,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | K3 LLM korak | `src/core/llm/` | Luka | Iz rezultata K2 pravi kratak savet na srpskom i osnov saveta |
 | K4 MCP server | `src/server/` | Sara | Registruje alate i `ui://` resurse, koristi K1–K3 |
 | A2UI poruke | `src/server/a2ui.ts` | Luka | Pretvara `Rezultat` u A2UI poruke za verziju B |
+| AI raspored (verzija B) | `src/server/a2ui-raspored.ts`, `a2ui-ai.ts` | Luka | Na želju korisnika (`prikaz`) LLM bira raspored iz kataloga; server ga proverava i prevodi u A2UI. Vrednosti samo preko `path`, bez cifara u tekstu; za stale/no_data/error uvek fiksni ekran |
 | Prikaz A | `src/ui-a/` | Sara | `ui://` HTML/TS ekran |
 | Prikaz B | `src/ui-b/` | Luka | A2UI renderer unutar MCP App-a |
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
