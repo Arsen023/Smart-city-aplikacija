@@ -11,6 +11,7 @@
 import type { PoslednjaVrednost, Rezultat, SatnaVrednost, Stanica } from "../core/tipovi.js";
 import { prikazDatumVreme } from "../core/vreme.js";
 import { KATALOG_ID, KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../zajednicko/a2ui-katalog.js";
+import { protekloVreme } from "../zajednicko/format.js";
 import { PORUKA_BEZ_SAVETA, tekstVrednosti } from "./procena.js";
 
 export const A2UI_MIME_TYPE = "application/a2ui+json";
@@ -45,16 +46,8 @@ export interface PodaciEkrana {
   osvezeno: string;
 }
 
-/** „pre 20 min“, „pre 3 h“, „pre 2 dana“ – koliko je prošlo od merenja (spec 8.1, element 3). */
-export function protekloVreme(measuredAt: string, sada: Date): string {
-  const min = Math.floor((sada.getTime() - Date.parse(measuredAt)) / 60_000);
-  if (min < 1) return "upravo";
-  if (min < 60) return `pre ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `pre ${h} h`;
-  const d = Math.floor(h / 24);
-  return d === 1 ? "pre 1 dan" : `pre ${d} dana`;
-}
+// protekloVreme() je premeštena u src/zajednicko/format.ts (T11); izvozi se i odavde, da postojeći uvozi rade.
+export { protekloVreme };
 
 function vremeOsvezavanja(sada: Date): string {
   return new Intl.DateTimeFormat("sr-Latn", {

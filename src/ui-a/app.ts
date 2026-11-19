@@ -19,6 +19,8 @@ import { procitajRezultat, procitajStanice, type StanicaZaIzbor } from "./sema.j
 
 const ALAT_PROCENA = "assess_air_quality";
 const ALAT_STANICE = "get_stations";
+/** Isti ključ kao META_SADA u src/server/alati.ts (ekran ne uvozi server). */
+const META_SADA = "smartcity/sada";
 
 const app = new App({ name: "Kvalitet vazduha", version: "1.0.0" });
 
@@ -44,9 +46,16 @@ app.onhostcontextchanged = primeniKontekst;
 
 // ─── Rezultat alata → ekran ────────────────────────────────────────────────
 
+/** „sada“ servera; ako ga nema ili nije ispravan, ekran samo ne prikazuje „pre X min“. */
+function procitajSada(v: unknown): Date | undefined {
+  if (typeof v !== "string") return undefined;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 function stanjeIzRezultata(rezultat: CallToolResult): StanjeEkrana {
   const r = rezultat.isError ? null : procitajRezultat(rezultat.structuredContent);
-  if (r) return { vrsta: "rezultat", rezultat: r };
+  if (r) return { vrsta: "rezultat", rezultat: r, sada: procitajSada(rezultat._meta?.[META_SADA]) };
   const stanica = trenutni.stanicaId ? { id: trenutni.stanicaId, naziv: dom.izbor.selectedOptions[0]?.text ?? "" } : undefined;
   // isError bez Rezultat-a ili neispravan oblik: opšta poruka, bez tehničkih detalja.
   return { vrsta: "greska", stanica };

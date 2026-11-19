@@ -11,7 +11,7 @@ import { z } from "zod/v3";
 const S = CommonSchemas as unknown as Record<"DynamicString" | "DynamicNumber" | "DynamicValue", z.ZodTypeAny>;
 import type { SatnaVrednost } from "../../core/tipovi.js";
 import { KOMPONENTA_GRAFIKON } from "../../zajednicko/a2ui-katalog.js";
-import { geometrija, PODRAZUMEVANE as D } from "./geometrija.js";
+import { BOJA_PM10, BOJA_PM25, geometrija, PODRAZUMEVANE as D } from "../../zajednicko/geometrija.js";
 
 export const GrafikonApi: ComponentApi = {
   name: KOMPONENTA_GRAFIKON,
@@ -21,9 +21,6 @@ export const GrafikonApi: ComponentApi = {
     jedinica: S.DynamicString.optional(),
   }) as unknown as ComponentApi["schema"],
 };
-
-const BOJA_PM25 = "#1F5FBF";
-const BOJA_PM10 = "#A34700";
 
 function jeSatnaVrednost(x: unknown): x is SatnaVrednost {
   return typeof x === "object" && x !== null && "vreme" in x;

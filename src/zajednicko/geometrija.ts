@@ -1,8 +1,16 @@
 /**
  * Geometrija linijskog grafikona za 24 h (spec 8.1, element 5). Čiste funkcije, bez DOM-a,
- * da bi se testirale u Node-u. Iscrtavanje je u grafikon.ts.
+ * da bi se testirale u Node-u.
+ *
+ * Zajedničko za verziju A (src/ui-a/crtaj.ts) i verziju B (src/ui-b/komponente/grafikon.ts),
+ * da oba grafikona imaju iste ose, oznake i prekide linije (NFR-01). Autor: Luka (T13),
+ * premešteno iz src/ui-b/komponente/geometrija.ts u T11.
  */
-import type { SatnaVrednost } from "../../core/tipovi.js";
+import type { SatnaVrednost } from "../core/tipovi.js";
+
+/** Boje linija – iste u A i B. PM10 je i isprekidana, da se linije razlikuju i bez boje. */
+export const BOJA_PM25 = "#1F5FBF";
+export const BOJA_PM10 = "#A34700";
 
 export interface Dimenzije {
   sirina: number;

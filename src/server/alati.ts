@@ -17,7 +17,7 @@ import path from "node:path";
 import { z } from "zod";
 import { GreskaEkonet } from "../core/ekonet/index.js";
 import { JEDINICA_PM, type Merenje, type Velicina } from "../core/tipovi.js";
-import { prikazDatumVreme } from "../core/vreme.js";
+import { isoBeograd, prikazDatumVreme } from "../core/vreme.js";
 import {
   porukaGreske,
   proceniKvalitet,
@@ -29,6 +29,13 @@ import {
 
 const DIST_DIR = path.join(import.meta.dirname, "..", "..", "dist");
 export const UI_A_RESOURCE_URI = "ui://air/dashboard-a";
+
+/**
+ * Ključ u `_meta` rezultata assess_air_quality: „sada“ servera (ISO, zona Beograda).
+ * U demo režimu je to vreme scenarija, pa ekran A računa „pre X min“ isto kao server za verziju B.
+ * Nije deo `Rezultat`-a, da se ne menja zajednički tip.
+ */
+export const META_SADA = "smartcity/sada";
 
 /** Zavisnosti se dobijaju tek pri pozivu alata, da greška u podešavanju postane odgovor, ne pad servera. */
 export type DobijZavisnosti = () => Promise<ZavisnostiProcene>;
@@ -153,7 +160,11 @@ export function registrujAlate(server: McpServer, dobijZavisnosti: DobijZavisnos
         return { content: tekst(tekstRezultata(r)), structuredContent: { ...r } };
       }
       const r = await proceniKvalitet(zavisnosti, stationId);
-      return { content: tekst(tekstRezultata(r)), structuredContent: { ...r } };
+      return {
+        content: tekst(tekstRezultata(r)),
+        structuredContent: { ...r },
+        _meta: { [META_SADA]: isoBeograd(zavisnosti.sada()) },
+      };
     },
   );
 

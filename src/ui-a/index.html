@@ -97,6 +97,21 @@
       color: var(--color-text-danger, var(--r-danger-text));
     }
 
+    #grafikon { margin: 0; }
+    #grafikon-svg { width: 100%; max-width: 640px; height: auto; display: block; }
+    #grafikon .osa { font-size: 11px; fill: currentColor; opacity: 0.75; }
+    #grafikon figcaption {
+      display: flex; gap: 1em; flex-wrap: wrap;
+      font-size: var(--font-text-sm-size, 13px);
+      color: var(--color-text-secondary, var(--r-text-2));
+    }
+    /* Boja legende (--b) se postavlja iz crtaj.ts, iz BOJA_PM25 / BOJA_PM10 u src/zajednicko/geometrija.ts. */
+    .leg::before {
+      content: ""; display: inline-block; width: 1.2em; height: 0;
+      border-top: 2px solid var(--b); margin-right: 0.35em; vertical-align: middle;
+    }
+    .leg.pm10::before { border-top-style: dashed; }
+
     #savet-blok {
       display: flex; flex-direction: column; gap: 4px;
       border-top: var(--border-width-regular, 1px) solid var(--color-border-secondary, var(--r-border));
@@ -125,7 +140,6 @@
       <!-- Elementi 2 i 3: vrednosti i vreme merenja -->
       <div class="merenje">
         <ul id="vrednosti" hidden></ul>
-        <!-- TODO(T10/zajednicko): „pre X min“ kad protekloVreme() pređe u src/zajednicko/ -->
         <span id="vreme" hidden></span>
       </div>
 
@@ -140,8 +154,15 @@
       <button id="pokusaj-ponovo" type="button" hidden>Pokušaj ponovo</button>
     </div>
 
-    <!-- Element 5: grafikon 24 h. TODO(T11): crtanje iz Rezultat.history, posle odluke o geometrija.ts u src/zajednicko/ -->
-    <section id="grafikon" hidden></section>
+    <!-- Element 5: grafikon 24 h iz Rezultat.history (geometrija iz src/zajednicko/, ista kao u verziji B) -->
+    <figure id="grafikon" hidden>
+      <svg id="grafikon-svg" role="img" aria-label="Grafikon PM2.5 i PM10 za poslednja 24 h"></svg>
+      <figcaption>
+        <span id="leg-pm25" class="leg pm25">PM2.5</span>
+        <span id="leg-pm10" class="leg pm10">PM10</span>
+        <span id="grafikon-potpis"></span>
+      </figcaption>
+    </figure>
 
     <!-- Elementi 6 i 7: savet i osnov -->
     <section id="savet-blok" hidden>

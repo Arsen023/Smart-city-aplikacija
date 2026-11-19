@@ -8,11 +8,13 @@ import type { Rezultat, Status, Velicina } from "../core/tipovi.js";
 import { JEDINICA_PM } from "../core/tipovi.js";
 import { prikazDatumVreme } from "../core/vreme.js";
 import { bojeKategorije } from "../zajednicko/boje-eaqi.js";
-import { tekstVrednosti } from "../zajednicko/format.js";
+import { protekloVreme, tekstVrednosti } from "../zajednicko/format.js";
+import { geometrija, PODRAZUMEVANE, type Dimenzije, type Grafikon } from "../zajednicko/geometrija.js";
 
 export type StanjeEkrana =
   | { vrsta: "ucitavanje" }
-  | { vrsta: "rezultat"; rezultat: Rezultat }
+  /** `sada`: „sada“ servera iz `_meta` (u demo režimu vreme scenarija); bez njega nema „pre X min“. */
+  | { vrsta: "rezultat"; rezultat: Rezultat; sada?: Date }
   /** Poziv alata nije uspeo, `isError`, ili structuredContent nije ispravnog oblika. */
   | { vrsta: "greska"; poruka?: string; stanica?: { id: string; naziv: string } };
 
@@ -23,10 +25,12 @@ export interface ModelEkrana {
   stanicaId: string | null;
   /** Element 2: "PM2.5 12,4 µg/m³", "PM10 nije dostupno". `null` = ne prikazuje se. */
   vrednosti: string[] | null;
-  /** Element 3: "Merenje: 16.11.2026. 09:00". TODO(T10/zajednicko): dodati „pre X min“ kad protekloVreme() pređe u src/zajednicko/. */
+  /** Element 3: "Merenje: 16.11.2026. 09:00 · pre 20 min" (isti tekst kao u verziji B). */
   vreme: string | null;
   /** Element 4: boja + naziv (nikad samo boja). */
   kategorija: { naziv: string; opis: string; pozadina: string; tekst: string } | null;
+  /** Element 5: grafikon 24 h (ok i stale); `null` kad nema nijedne satne vrednosti. */
+  grafikon: ModelGrafikona | null;
   napomena: string | null;
   /** Poruka za stale / no_data / error, ili zašto nema saveta (S5). */
   poruka: string | null;
@@ -34,6 +38,15 @@ export interface ModelEkrana {
   osnov: string | null;
   pravilo: string | null;
   pokusajPonovo: boolean;
+}
+
+export interface ModelGrafikona {
+  dim: Dimenzije;
+  g: Grafikon;
+  /** Tekst za čitač ekrana (aria-label). */
+  opis: string;
+  /** Potpis ispod: jedinica i period. */
+  potpis: string;
 }
 
 export const PORUKA_UCITAVANJE = "Učitavanje…";
@@ -47,6 +60,7 @@ const VELICINE: readonly Velicina[] = ["PM2.5", "PM10"];
 const prazno: Omit<ModelEkrana, "stanje" | "naslov" | "stanicaId"> = {
   vrednosti: null,
   vreme: null,
+  grafikon: null,
   kategorija: null,
   napomena: null,
   poruka: null,
@@ -63,6 +77,18 @@ function vrednosti(r: Rezultat): string[] {
   return VELICINE.map((velicina) =>
     tekstVrednosti(r.values.find((v) => v.velicina === velicina) ?? { velicina, vrednost: null, jedinica: JEDINICA_PM }),
   );
+}
+
+/** Grafikon za ok i stale (i stari podaci se vide, spec 8.1); bez ijedne vrednosti – ne crta se. */
+function grafikon(r: Rezultat): ModelGrafikona | null {
+  const imaVrednost = r.history.some((t) => t.pm25 !== null || t.pm10 !== null);
+  if (!imaVrednost) return null;
+  return {
+    dim: PODRAZUMEVANE,
+    g: geometrija(r.history),
+    opis: `Grafikon PM2.5 i PM10 za poslednja 24 h, u ${JEDINICA_PM}`,
+    potpis: `${JEDINICA_PM}, poslednja 24 h`,
+  };
 }
 
 export function modelEkrana(s: StanjeEkrana): ModelEkrana {
@@ -88,7 +114,7 @@ export function modelEkrana(s: StanjeEkrana): ModelEkrana {
   }
 
   const vreme = r.measuredAt
-    ? `Merenje: ${prikazDatumVreme(new Date(r.measuredAt))}`
+    ? `Merenje: ${prikazDatumVreme(new Date(r.measuredAt))}` + (s.sada ? ` · ${protekloVreme(r.measuredAt, s.sada)}` : "")
     : r.status === "no_data"
       ? "Merenje: nema podataka"
       : null;
@@ -110,6 +136,7 @@ export function modelEkrana(s: StanjeEkrana): ModelEkrana {
     ...osnovno,
     vrednosti: vrednosti(r),
     vreme,
+    grafikon: grafikon(r),
     kategorija,
     napomena: ok ? r.napomena : null,
     poruka: ok ? (advice ? null : (r.message ?? PORUKA_BEZ_SAVETA)) : (r.message ?? PORUKA_BEZ_PREPORUKE),

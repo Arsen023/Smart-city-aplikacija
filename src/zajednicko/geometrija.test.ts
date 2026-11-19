@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import type { SatnaVrednost } from "../../core/tipovi.js";
+import type { SatnaVrednost } from "../core/tipovi.js";
 import { geometrija, lepaGranica, PODRAZUMEVANE } from "./geometrija.js";
 
 const t = (sat: number, pm25: number | null, pm10: number | null): SatnaVrednost => ({

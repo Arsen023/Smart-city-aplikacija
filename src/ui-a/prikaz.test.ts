@@ -133,3 +133,71 @@ describe("ekran A – tekst za model", () => {
     assert.doesNotMatch(t, /Kategorija/);
   });
 });
+
+describe("ekran A – „pre X min“ (element 3)", () => {
+  test("sa „sada“ servera: isti tekst kao u verziji B", () => {
+    const e = modelEkrana({ vrsta: "rezultat", rezultat: rezultatS1(), sada: new Date("2026-11-16T09:20:00+01:00") });
+    assert.equal(e.vreme, "Merenje: 16.11.2026. 09:00 · pre 20 min");
+  });
+
+  test("stale (S3): vidi se koliko je merenje staro", () => {
+    const e = modelEkrana({ vrsta: "rezultat", rezultat: rezultatS3(), sada: new Date("2026-11-16T09:20:00+01:00") });
+    assert.equal(e.vreme, "Merenje: 16.11.2026. 05:00 · pre 4 h");
+  });
+
+  test("bez „sada“: samo vreme merenja, bez izmišljenog „pre X min“", () => {
+    assert.equal(m(rezultatS1()).vreme, "Merenje: 16.11.2026. 09:00");
+  });
+
+  test("no_data (S6): nema „pre X min“", () => {
+    const e = modelEkrana({ vrsta: "rezultat", rezultat: rezultatS6(), sada: new Date("2026-11-16T09:20:00+01:00") });
+    assert.equal(e.vreme, "Merenje: nema podataka");
+  });
+});
+
+describe("ekran A – grafikon 24 h (element 5)", () => {
+  const istorija = [
+    { vreme: "2026-11-16T07:00:00+01:00", pm25: 4, pm10: 9 },
+    { vreme: "2026-11-16T08:00:00+01:00", pm25: 5, pm10: 11 },
+    { vreme: "2026-11-16T09:00:00+01:00", pm25: 3.7, pm10: 12.4 },
+  ];
+
+  test("ok (S1): obe linije, jedinica u potpisu i opisu", () => {
+    const g = m({ ...rezultatS1(), history: istorija }).grafikon;
+    assert.ok(g);
+    assert.ok(g.g.pm25.startsWith("M"));
+    assert.ok(g.g.pm10.startsWith("M"));
+    assert.equal(g.potpis, "µg/m³, poslednja 24 h");
+    assert.match(g.opis, /PM2\.5 i PM10.*µg\/m³/);
+  });
+
+  test("S5 bez saveta: grafikon se i dalje vidi", () => {
+    assert.ok(m({ ...rezultatS5(), history: istorija }).grafikon);
+  });
+
+  test("stale (S3): grafikon se vidi (stari podaci), bez kategorije i saveta", () => {
+    const e = m({ ...rezultatS3(), history: istorija });
+    assert.ok(e.grafikon);
+    assert.equal(e.kategorija, null);
+    assert.equal(e.savet, null);
+  });
+
+  test("S4: bez PM2.5 nema linije PM2.5, nema crtanja nule", () => {
+    const g = m({ ...rezultatS4(), history: istorija.map((t) => ({ ...t, pm25: null })) }).grafikon;
+    assert.ok(g);
+    assert.equal(g.g.pm25, "");
+    assert.ok(g.g.pm10.length > 0);
+  });
+
+  test("istorija bez ijedne vrednosti: nema grafikona", () => {
+    const prazna = istorija.map((t) => ({ ...t, pm25: null, pm10: null }));
+    assert.equal(m({ ...rezultatS1(), history: prazna }).grafikon, null);
+  });
+
+  test("no_data (S6), greška i učitavanje: nema grafikona", () => {
+    assert.equal(m(rezultatS6()).grafikon, null);
+    assert.equal(m({ ...rezultatGreska(), history: istorija }).grafikon, null);
+    assert.equal(modelEkrana({ vrsta: "greska" }).grafikon, null);
+    assert.equal(modelEkrana({ vrsta: "ucitavanje" }).grafikon, null);
+  });
+});
