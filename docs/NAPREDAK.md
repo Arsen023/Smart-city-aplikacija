@@ -18,7 +18,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | T10 | Verzija A, 7 elemenata | Sara | Gotovo | `sara/ui-a` | #12 | 2026-11-18 |
 | T11 | Grafikon 24 h i „pre X min“ u verziji A | Sara | U pregledu | `sara/ui-a` | — | 2026-11-18 |
 | T12 | A2UI poruke iz rezultata | Luka | Gotovo | `luka/ui-b` | #10 | 2026-11-18 |
-| T13 | Verzija B + komponenta za grafikon | Luka | Gotovo | `luka/ui-b` | #10 | 2026-11-18 |
+| T13 | Verzija B + komponenta za grafikon, raspored po Stitch skici | Luka | Gotovo | `luka/ui-b`, `luka/ui-b-izgled` | #10, #16 | 2026-11-18 |
 | T14 | Scenariji S1–S6 na obe verzije | zajedno | Nije početo | — | — | — |
 | T15 | README | zajedno | Nije početo | — | — | — |
 | T16 | Demo i pisana preporuka (D6) | zajedno | Nije početo | — | — | — |
@@ -27,14 +27,15 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | — | Podešavanje: CLAUDE.md, podela rada, skillovi | Sara | Gotovo | `sara/podesavanje` | #3 | 2026-11-17 |
 | — | Skillovi za napredak i ekran A, NAPREDAK.md | Sara | Gotovo | `sara/napredak` | #5 | 2026-11-17 |
 | — | Zajednički folder `src/zajednicko/` (EAQI boje, ID A2UI kataloga) | Luka | Gotovo | `luka/zajednicko` | #11 | 2026-11-18 |
-| — | CI (GitHub Actions: typecheck, test, build) | Sara | U pregledu | `sara/ci` | — | 2026-11-18 |
+| — | CI (GitHub Actions: typecheck, test, build) | Sara | Gotovo | `sara/ci` | #14 | 2026-11-18 |
+| — | Chat aplikacija (sopstveni MCP host, prekidač A/B) za demo | Luka | Gotovo | `luka/chat` | #15 | 2026-11-18 |
 | — | Snimci ekrana A za S1–S6 (`docs/snimci/`) | Sara | Nije početo | `sara/ui-a` | — | — |
 
 ## Sledeći koraci
 1. Luka: pregled PR-a `sara/ui-a` (T11): `src/zajednicko/format.ts` i `geometrija.ts`, male izmene u `src/server/a2ui.ts` i `src/ui-b/komponente/grafikon.ts`, `_meta["smartcity/sada"]`, obrisan `src/ui-b/komponente/geometrija.ts`.
-2. Luka: pregled PR-a `sara/ci` (GitHub Actions).
+2. Sara: verzija A po Stitch skici, isti raspored kao B (NFR-01) – predložak `docs/stitch/stitch-sa-podacima.html` i `stitch-bez-preporuke.html`.
 3. Sara: snimci S1–S6 za verziju A u `docs/snimci/` (uputstvo u `docs/snimci/README.md`).
-4. Zajedno: isti Stitch raspored u A i B (NFR-01) – predložak `docs/stitch/stitch-sa-podacima.html` i `stitch-bez-preporuke.html`.
+4. Zajedno: potvrditi sa mentorom demo kroz našu chat aplikaciju (`npm run chat`).
 5. Zajedno: keš saveta u `src/server/procena.ts` (isti savet u A i B, FR-13; keš 5 min, NFR-03).
 6. Luka i Sara: T04 prezentacija – Stitch skice i zaključak T05, A2UI v0.9 i sopstvene komponente.
 7. Zajedno: T14 (S1–S6 na obe verzije), T15 README, T16 demo i pisana preporuka (D6).
@@ -47,6 +48,11 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 - Server šalje „sada“ u `_meta["smartcity/sada"]` rezultata `assess_air_quality`, bez izmene `Rezultat`-a. Plan: `docs/planovi/T11-grafikon-a.md`.
 - `.github/workflows/ci.yml`: `npm ci`, typecheck, testovi, build A i B na Node 24 (grana `sara/ci`).
 - 214 testova prolazi.
+
+### 2026-11-18 – Luka – chat aplikacija (demo)
+- `src/chat/`: sopstveni MCP host sa chatom. Groq bira alat (`get_stations`, `assess_air_quality` ili `assess_air_quality_a2ui`), ekran A ili B se prikazuje u razgovoru (AppBridge + sandbox na drugom originu), pa AI kratko odgovori.
+- Prekidač „Verzija A · HTML / Verzija B · A2UI“ i oznaka na svakom ekranu, za prezentaciju. `?mcp=` bira MCP server (scenario), `?verzija=B`.
+- Groq ključ samo na chat serveru; chat ne uvozi `src/core` ni `src/server` – sa serverom razgovara samo preko MCP-a. 13 testova.
 
 ### 2026-11-18 – Luka – T12, T13, T05
 - `src/server/a2ui.ts`: A2UI v0.9 poruke iz `Rezultat`-a (ne iz fixtures), deterministički; za `stale` / `no_data` / `error` poruka umesto kategorije i saveta. `assess_air_quality_a2ui` i `osvezi_a2ui` koriste isti `proceniKvalitet` kao verzija A (PR #10).
@@ -116,6 +122,7 @@ Poslednje ažuriranje: 2026-11-18 (Sara)
 | 2026-11-17 | LLM: Groq; podrazumevani model `openai/gpt-oss-120b`, menja se preko `GROQ_MODEL` (isproban i `qwen/qwen3.8-27b`) | `llama-3.3-70b-versatile` nije dostupan sa ključem; oba modela prošla proveru | Luka |
 | 2026-11-17 | A2UI protokol v0.9 | Lit renderer `@a2ui/lit` 0.15 podržava v0.9, ne v1.0 | Luka |
 | 2026-11-18 | Kategorija u boji i grafikon kao sopstvene komponente u našem A2UI katalogu | Osnovni katalog nema boju teksta ni grafikon (T05) | Luka |
+| 2026-11-18 | Demo kroz sopstvenu chat aplikaciju (`src/chat/`), ne kroz Claude/VS Code | Mentor očekuje aplikaciju sa chatom; ne zavisimo od tuđeg naloga. Odstupanje od spec (host je bio npr. Claude) – potvrditi sa mentorom | Luka |
 | 2026-11-18 | Google Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti | A2UI pravi server deterministički iz `Rezultat`-a (spec 8.3); bez strogog prompta Stitch izmišlja sadržaj (T05) | Luka |
 | 2026-11-18 | Šeme sopstvenih A2UI komponenti preko `zod/v3` | A2UI interno koristi Zod 3; `zod/v3` je deo instaliranog Zod 4, bez novog paketa | Luka |
 | 2026-11-18 | `src/zajednicko/` za konstante i čiste funkcije koje dele A, B i server (boje EAQI, ID kataloga) | Isti izgled A i B (NFR-01); server ne uvozi iz `src/ui-*` | zajedno (PR #11) |

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="sr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- CSP postavlja chat server preko HTTP zaglavlja (src/chat/server.ts). -->
+    <title>Sandbox ekrana</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        background-color: transparent;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      iframe {
+        background-color: transparent;
+        border: 0 none transparent;
+        padding: 0;
+        overflow: hidden;
+        flex-grow: 1;
+        color-scheme: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module" src="./sandbox.ts"></script>
+  </body>
+</html>

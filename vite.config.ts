@@ -2,22 +2,32 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
-// UI=ui-a ili UI=ui-b: koji prikaz se pakuje u jedan HTML fajl.
+// UI bira šta se pakuje u jedan HTML fajl:
+//   ui-a, ui-b        – ekrani verzije A i B (MCP App resursi)
+//   chat, chat-sandbox – chat aplikacija (naš MCP host) i njen sandbox za ekrane
+const KORENI = {
+  "ui-a": "src/ui-a",
+  "ui-b": "src/ui-b",
+  chat: "src/chat/ui",
+  "chat-sandbox": "src/chat/sandbox",
+} as const;
+
 const UI = process.env.UI;
-if (UI !== "ui-a" && UI !== "ui-b") {
-  throw new Error('Postavi promenljivu UI na "ui-a" ili "ui-b"');
+if (!UI || !(UI in KORENI)) {
+  throw new Error(`Postavi promenljivu UI na jedno od: ${Object.keys(KORENI).join(", ")}`);
 }
+const koren = KORENI[UI as keyof typeof KORENI];
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
 export default defineConfig({
-  root: path.resolve(import.meta.dirname, "src", UI),
+  root: path.resolve(import.meta.dirname, koren),
   plugins: [viteSingleFile()],
   build: {
     sourcemap: isDevelopment ? "inline" : undefined,
     cssMinify: !isDevelopment,
     minify: !isDevelopment,
-    // Rezultat: dist/ui-a/index.html ili dist/ui-b/index.html
+    // Rezultat: dist/<UI>/index.html
     outDir: path.resolve(import.meta.dirname, "dist", UI),
     emptyOutDir: true,
   },
