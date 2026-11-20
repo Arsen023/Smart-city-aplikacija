@@ -16,8 +16,8 @@ export const ALAT_PROCENE: Record<Verzija, string> = {
 };
 
 export const OPIS_VERZIJE: Record<Verzija, string> = {
-  A: "Verzija A · HTML",
-  B: "Verzija B · A2UI",
+  A: "Verzija A · MCP App (HTML)",
+  B: "Verzija B · A2UI (izvorno)",
 };
 
 /** Najmanji oblik MCP alata koji nam treba (iz tools/list). */
@@ -37,7 +37,55 @@ export interface ChatAlat {
 /** Alati koje model vidi: spisak stanica + procena za izabranu verziju. Alati samo za ekran se ne nude. */
 export function alatiZaVerziju(alati: McpAlat[], verzija: Verzija): McpAlat[] {
   const dozvoljeni = new Set(["get_stations", ALAT_PROCENE[verzija]]);
-  return alati.filter((a) => dozvoljeni.has(a.name) && !samoZaEkran(a));
+  return alati
+    .filter((a) => dozvoljeni.has(a.name) && !samoZaEkran(a))
+    .map((a) => (verzija === "B" ? bezParametraPrikaz(a) : a));
+}
+
+/**
+ * U izvornom A2UI ekran sastavlja chat model, pa mu parametar `prikaz` (raspored koji pravi server,
+ * za MCP hostove kao Claude Desktop) ne treba – inače bi ekran sastavljala dva modela.
+ */
+function bezParametraPrikaz(a: McpAlat): McpAlat {
+  const props = a.inputSchema.properties;
+  if (!props || !("prikaz" in props)) return a;
+  const { prikaz: _p, ...ostalo } = props;
+  void _p;
+  return { ...a, inputSchema: { ...a.inputSchema, properties: ostalo } };
+}
+
+/**
+ * Sažet razgovor za korak u kome AI sastavlja A2UI ekran: pitanje korisnika i rezultat procene
+ * kao običan tekst – bez istorije poziva alata i bez alata (model tada ne pokušava nove pozive,
+ * a troši se mnogo manje tokena).
+ */
+export function sazmiZaA2ui(poruke: ChatPoruka[]): ChatPoruka[] {
+  const poslednjeUser = poruke.map((p) => p.role).lastIndexOf("user");
+  const pitanje = poruke[poslednjeUser]?.content ?? "";
+  const rezultati = poruke
+    .slice(poslednjeUser + 1)
+    .filter((p) => p.role === "tool" && p.content)
+    .map((p) => p.content as string);
+  return [
+    { role: "user", content: pitanje },
+    { role: "user", content: `Rezultat alata (podaci su već u data modelu ekrana):\n${rezultati.join("\n\n")}` },
+  ];
+}
+
+/**
+ * A2UI uputstvo za chat model ide tek kad u tekućem pitanju stigne rezultat procene verzije B
+ * (ne posle get_stations) – tada model ima podatke i treba samo da sastavi ekran; štede se tokeni.
+ */
+export function trebaA2uiUputstvo(
+  verzija: Verzija,
+  poruke: Array<Pick<ChatPoruka, "role" | "tool_calls" | "tool_call_id">>,
+): boolean {
+  if (verzija !== "B") return false;
+  const odPitanja = poruke.slice(poruke.map((p) => p.role).lastIndexOf("user") + 1);
+  const pozivi = new Set(
+    odPitanja.flatMap((p) => (p.tool_calls ?? []).filter((t) => t.function.name === ALAT_PROCENE.B).map((t) => t.id)),
+  );
+  return odPitanja.some((p) => p.role === "tool" && p.tool_call_id !== undefined && pozivi.has(p.tool_call_id));
 }
 
 function samoZaEkran(a: McpAlat): boolean {
@@ -106,9 +154,9 @@ export function sistemskaPoruka(verzija: Verzija): string {
     "Rezultat alata se korisniku prikazuje kao ekran sa vrednostima, kategorijom, grafikonom i savetom.",
     ...(verzija === "B"
       ? [
-          "Ekran verzije B može da se složi po želji korisnika. Ako korisnik kaže KAKO želi da vidi podatke " +
-            "(npr. „samo grafikon“, „samo kategoriju i savet“, „krupno vrednosti“), prosledi tu želju u parametru prikaz, na srpskom, " +
-            "i ponovo pozovi alat. Za obično pitanje o vazduhu ne šalji prikaz.",
+          "U ovoj verziji ekran sastavljaš TI, u A2UI bloku (pravila dobijaš posle rezultata alata).",
+          "Ako korisnik kaže KAKO želi da vidi podatke (npr. „samo grafikon“, „samo kategoriju i savet“, „krupno vrednosti“), " +
+            "složi ekran tačno po toj želji; inače napravi pregledan ekran sa stanicom, vrednostima, vremenom, kategorijom, grafikonom, savetom i osnovom.",
         ]
       : []),
     "Posle alata odgovori kratko, u 1–2 rečenice, na srpskom jeziku, latinicom, i obraćaj se sa „vi“.",

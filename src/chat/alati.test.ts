@@ -7,6 +7,7 @@ import {
   jeGreskaProcene,
   sistemskaPoruka,
   tekstZaModel,
+  trebaA2uiUputstvo,
   uChatAlat,
   type McpAlat,
 } from "./alati.js";
@@ -124,9 +125,33 @@ describe("sistemska poruka i argumenti", () => {
   });
 });
 
-describe("sistemska poruka – AI raspored", () => {
-  test("samo verzija B pominje parametar prikaz", () => {
-    assert.match(sistemskaPoruka("B"), /parametru prikaz/);
-    assert.doesNotMatch(sistemskaPoruka("A"), /parametru prikaz/);
+describe("verzija B – izvorni A2UI", () => {
+  test("samo verzija B kaže da model sastavlja ekran u A2UI bloku", () => {
+    assert.match(sistemskaPoruka("B"), /A2UI bloku/);
+    assert.doesNotMatch(sistemskaPoruka("A"), /A2UI/);
+  });
+
+  test("u verziji B alat nema parametar prikaz (ekran sastavlja chat model)", () => {
+    const a: McpAlat = {
+      name: "assess_air_quality_a2ui",
+      inputSchema: { type: "object", properties: { stationId: { type: "string" }, prikaz: { type: "string" } } },
+    };
+    const [b] = alatiZaVerziju([a], "B");
+    assert.deepEqual(Object.keys(b.inputSchema.properties ?? {}), ["stationId"]);
+  });
+
+  test("A2UI uputstvo tek posle rezultata procene u tekućem pitanju, i samo u B", () => {
+    const poziv = (id: string, ime: string) => ({ id, type: "function" as const, function: { name: ime, arguments: "{}" } });
+    const posleStanica = [
+      { role: "user" as const },
+      { role: "assistant" as const, tool_calls: [poziv("1", "get_stations")] },
+      { role: "tool" as const, tool_call_id: "1" },
+    ];
+    assert.equal(trebaA2uiUputstvo("B", posleStanica), false);
+    const poslePorocene = [...posleStanica, { role: "assistant" as const, tool_calls: [poziv("2", "assess_air_quality_a2ui")] }, { role: "tool" as const, tool_call_id: "2" }];
+    assert.equal(trebaA2uiUputstvo("B", poslePorocene), true);
+    assert.equal(trebaA2uiUputstvo("A", poslePorocene), false);
+    // novo pitanje: stara procena se ne računa
+    assert.equal(trebaA2uiUputstvo("B", [...poslePorocene, { role: "user" as const }]), false);
   });
 });

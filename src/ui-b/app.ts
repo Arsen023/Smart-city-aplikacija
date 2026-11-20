@@ -12,7 +12,7 @@ import { A2uiSurface } from "@a2ui/lit/v0_9";
 import { injectBasicCatalogStyles } from "@a2ui/web_core/v0_9/basic_catalog";
 import { MessageProcessor, type ActionPayload, type ProcessableMessagePayload } from "@a2ui/web_core/v0_9";
 import { html, render } from "lit";
-import { katalog } from "./katalog.js";
+import { katalog } from "../a2ui/katalog.js";
 
 const A2UI_MIME_TYPE = "application/a2ui+json";
 const AKCIJE = new Set(["osvezi", "izaberi_stanicu"]);

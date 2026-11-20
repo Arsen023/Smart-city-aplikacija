@@ -1,5 +1,6 @@
 /**
- * Naš A2UI katalog za verziju B: osnovni katalog v0.9 + KategorijaBadge + Grafikon24h.
+ * Naš A2UI katalog (renderer): osnovni katalog v0.9 + KategorijaBadge + Grafikon24h.
+ * Zajednički za ekran verzije B (MCP App, src/ui-b/) i izvorni A2UI u chatu (src/chat/ui/).
  * ID mora biti isti kao u createSurface na serveru (katalog-id.ts).
  */
 import { basicCatalog } from "@a2ui/lit/v0_9";
