@@ -12,7 +12,8 @@ import type { MerenjeVode, UredjajVode } from "./tipovi.js";
 const KOLONE_MERENJA = `uredjaj_id, vreme, temperatura_c, ph, orp, dox, con, dox_zasicenje, dco2`;
 
 export const SQL = {
-  uredjaji: `SELECT id, naziv, tip, lokacija FROM uredjaj ORDER BY id`,
+  // U tabeli su i uređaji za vazduh i vreme (db/03-vazduh-vreme.sql); alati za vodu vide samo svoje.
+  uredjaji: `SELECT id, naziv, tip, lokacija FROM uredjaj WHERE tip = 'kvalitet vode' ORDER BY id`,
   poslednjeMerenje: `SELECT ${KOLONE_MERENJA} FROM merenje_vode
     WHERE uredjaj_id = $1 ORDER BY vreme DESC LIMIT 1`,
   /** $1 = uređaj, $2 = broj sati; period se računa od poslednjeg merenja tog uređaja. */
@@ -20,7 +21,7 @@ export const SQL = {
     WHERE uredjaj_id = $1
       AND vreme > (SELECT max(vreme) FROM merenje_vode WHERE uredjaj_id = $1) - make_interval(hours => $2::int)
     ORDER BY vreme ASC`,
-  postojiUredjaj: `SELECT 1 FROM uredjaj WHERE id = $1`,
+  postojiUredjaj: `SELECT 1 FROM uredjaj WHERE id = $1 AND tip = 'kvalitet vode'`,
   pregled: `SELECT count(*)::int AS broj, min(vreme) AS od, max(vreme) AS do FROM merenje_vode`,
 } as const;
 

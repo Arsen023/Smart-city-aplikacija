@@ -20,6 +20,7 @@ npm run build        # typecheck + build ekrana A i B (dist/ui-a, dist/ui-b) i c
 npm run chat         # chat aplikacija na http://localhost:3010 (treba i npm start; Groq ključ iz .env)
 npm run demo         # sve za demo jednom komandom: build + MCP server (3001) + chat (3010)
 npm run baza:provera # provera veze sa PostgreSQL bazom (DATABASE_URL iz .env)
+npm run baza:uvoz    # uvoz vremena i vazduha (Open-Meteo, Sensor.Community) u bazu; prvo db/03-vazduh-vreme.sql
 npm test             # testovi (node --test + tsx), fajlovi *.test.ts
 npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
@@ -53,6 +54,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
 | Chat aplikacija (naš MCP host) | `src/chat/` | Luka | Chat sa Groq-om (`server.ts`, port 3010), stranica sa prekidačem A/B (`ui/`), sandbox za ekrane verzije A (`sandbox/`, port 3011). Verzija B: AI sastavlja A2UI ekran (`a2ui-agent.ts`, zvanični SDK `@a2ui/agent` + naše provere), chat ga crta izvorno (`ui/a2ui-prikaz.ts`). Ne računa ništa: podatke uzima iz MCP alata |
 | Baza (voda) | `src/core/baza/`, `db/` | Sara | PostgreSQL: šema i istorija FishNET merenja (`db/`), čitanje preko `pg` (`src/core/baza/`), alati `get_water_*` (`src/server/voda-alati.ts`) |
+| Uvoz vazduha i vremena | `src/core/baza/uvoz/`, `db/03-vazduh-vreme.sql` | Luka | Open-Meteo (vreme, vazduh – model) i Sensor.Community (senzori) → tabele `merenje_vazduha`, `merenje_vremena` |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |

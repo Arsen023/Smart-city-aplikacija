@@ -69,11 +69,19 @@ export function procitajUrlBaze(env: Record<string, string | undefined> = proces
 
 /** Prava veza preko `pg` (paket se učitava tek ovde, da testovi i ekrani ne zavise od njega). */
 export async function poveziBazu(env: Record<string, string | undefined> = process.env): Promise<BazaVode> {
+  const veza = await poveziVezu(env);
+  return napraviBazu(veza.izvrsi, veza.zatvori);
+}
+
+/** Sirova veza (izvrši upit + zatvori) – za uvoz podataka (`npm run baza:uvoz`). */
+export async function poveziVezu(
+  env: Record<string, string | undefined> = process.env,
+): Promise<{ izvrsi: IzvrsiUpit; zatvori: () => Promise<void> }> {
   const url = procitajUrlBaze(env);
   const { default: pg } = await import("pg");
   const pool = new pg.Pool({ connectionString: url, max: 5, connectionTimeoutMillis: 3000 });
-  return napraviBazu(
-    (sql, parametri) => pool.query(sql, parametri),
-    () => pool.end(),
-  );
+  return {
+    izvrsi: (sql, parametri) => pool.query(sql, parametri),
+    zatvori: () => pool.end(),
+  };
 }
