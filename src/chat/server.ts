@@ -125,7 +125,16 @@ app.post("/api/chat", async (req: Request, res: Response) => {
   const telo = JSON.stringify(
     sastaviEkran
       ? { model: A2UI_MODEL, messages: [...sistem, ...sazmiZaA2ui(poruke)], temperature: 0.2, max_tokens: 1500 }
-      : { model: MODEL, messages: [...sistem, ...poruke], tools: alati, tool_choice: "auto", temperature: 0.2, max_tokens: 1024 },
+      : {
+          model: MODEL,
+          messages: [...sistem, ...poruke],
+          tools: alati,
+          tool_choice: "auto",
+          // Jedan alat po koraku: gpt-oss inače pokušava „multi_tool_use.parallel“, što Groq odbija (tool_use_failed).
+          parallel_tool_calls: false,
+          temperature: 0.2,
+          max_tokens: 1024,
+        },
   );
 
   const pocetak = Date.now();
@@ -142,12 +151,17 @@ app.post("/api/chat", async (req: Request, res: Response) => {
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       if (odgovor.ok) break;
-      const kod = await odgovor
+      const greska = await odgovor
         .clone()
         .json()
-        .then((t: { error?: { code?: string } }) => t.error?.code)
+        .then((t: { error?: { code?: string; failed_generation?: string } }) => t.error)
         .catch(() => undefined);
-      console.error(`[chat] Groq HTTP ${odgovor.status}${kod ? ` (${kod})` : ""} posle ${Date.now() - pocetak} ms, pokušaj ${pokusaj}`);
+      const kod = greska?.code;
+      // Za tool_use_failed Groq vraća šta je model pokušao (failed_generation) – kratko u log, bez ključa i bez prompta.
+      const pokusao = greska?.failed_generation ? `; model je pokušao: ${greska.failed_generation.slice(0, 200)}` : "";
+      console.error(
+        `[chat] Groq HTTP ${odgovor.status}${kod ? ` (${kod})` : ""} posle ${Date.now() - pocetak} ms, pokušaj ${pokusaj}${pokusao}`,
+      );
       if (odgovor.status === 429 && pokusaj === 1) {
         const sekundi = Number.parseFloat(odgovor.headers.get("retry-after") ?? "2");
         await new Promise((r) => setTimeout(r, Math.min(Number.isFinite(sekundi) ? sekundi : 2, 4) * 1000));

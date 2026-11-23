@@ -5,6 +5,7 @@
  * savet samo src/core/llm/. Zavisnosti se prosleđuju spolja da bi se tok testirao
  * nad fixtures/ bez mreže i bez pravog LLM-a.
  */
+import { z } from "zod";
 import { GreskaEkonet, napraviIzvor } from "../core/ekonet/index.js";
 import { napraviSavet } from "../core/llm/index.js";
 import { proceni, satneVrednosti } from "../core/pravila/index.js";
@@ -129,6 +130,21 @@ async function izaberiStanicu(klijent: EkonetKlijent, stationId?: string): Promi
 }
 
 // ─── Glavni tok ────────────────────────────────────────────────────────────
+
+/**
+ * Šema za opcioni stationId u alatima za procenu (verzije A i B). Prihvata i "" i null:
+ * modeli tako kažu „ne znam stanicu“, a Groq proverava poziv prema šemi (stroža šema → tool_use_failed).
+ */
+export const opcionaStanicaSema = z
+  .string()
+  .nullish()
+  .describe("Station id from get_stations, e.g. \"demo-liman\". Omit it (or leave empty) to use the first station.");
+
+/** "", razmaci i null znače „bez stanice“ – tada procena uzima prvu stanicu. */
+export function idIliPrvi(stationId: string | null | undefined): string | undefined {
+  const id = stationId?.trim();
+  return id ? id : undefined;
+}
 
 /** Ceo tok assess_air_quality. Nikad ne baca izuzetak: greška postaje status "error" (NFR-05). */
 export async function proceniKvalitet(

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { GreskaBaze, napraviBazu, type BazaVode } from "../core/baza/index.js";
 import { SQL } from "../core/baza/upiti.js";
-import { registrujAlateVode, type DobijBazu } from "./voda-alati.js";
+import { registrujAlateVode, sazetakIstorijeVode, type DobijBazu } from "./voda-alati.js";
 
 const red = (vreme: string) => ({
   uredjaj_id: "fishnet-1",
@@ -46,6 +46,16 @@ const pozovi = async (k: Client, name: string, args: Record<string, unknown> = {
 const tekst = (r: CallToolResult) => (r.content[0]?.type === "text" ? r.content[0].text : "");
 
 describe("MCP alati za vodu", () => {
+  test("šema dozvoljava deviceId kao prazan tekst i null (Groq proverava poziv prema šemi)", async () => {
+    const k = await povezi(async () => laznaBaza());
+    const latest = (await k.listTools()).tools.find((t) => t.name === "get_water_latest");
+    const sema = JSON.stringify(latest?.inputSchema.properties?.deviceId);
+    assert.doesNotMatch(sema, /minLength/);
+    assert.match(sema, /null/);
+    assert.deepEqual(latest?.inputSchema.required ?? [], []);
+    await k.close();
+  });
+
   test("registrovana su 3 alata", async () => {
     const k = await povezi(async () => laznaBaza());
     const imena = (await k.listTools()).tools.map((t) => t.name).sort();
@@ -74,7 +84,25 @@ describe("MCP alati za vodu", () => {
   test("get_water_history: broj merenja i raspon", async () => {
     const k = await povezi(async () => laznaBaza());
     const r = await pozovi(k, "get_water_history", { deviceId: "fishnet-1" });
-    assert.match(tekst(r), /^fishnet-1: 2 merenja za 24 h, od 23\.01\.2023\. 13:00 do 23\.01\.2023\. 14:15\.$/);
+    assert.match(tekst(r), /^fishnet-1: 2 merenja za 24 h, od 23\.01\.2023\. 13:00 do 23\.01\.2023\. 14:15\. Promena: /);
+    assert.match(tekst(r), /temperatura 21,24 → 21,24 °C \(najmanje 21,24, najviše 21,24\)/);
+    await k.close();
+  });
+
+  test("bez deviceId: koristi se prvi uređaj iz baze", async () => {
+    const k = await povezi(async () => laznaBaza());
+    const r = await pozovi(k, "get_water_latest");
+    assert.notEqual(r.isError, true);
+    assert.match(tekst(r), /^fishnet-1, 23\.01\.2023\. 14:15: /);
+    assert.match(tekst(r), /\(pre \d+ dana\)\.$/);
+    // Modeli često pošalju prazan tekst ili null – i to znači „prvi uređaj“, ne grešku.
+    for (const deviceId of ["", "  ", null]) {
+      const p = await pozovi(k, "get_water_latest", { deviceId });
+      assert.notEqual(p.isError, true, `deviceId=${JSON.stringify(deviceId)}`);
+      assert.match(tekst(p), /^fishnet-1, /);
+    }
+    const h = await pozovi(k, "get_water_history", { hours: 6 });
+    assert.match(tekst(h), /^fishnet-1: 2 merenja za 6 h/);
     await k.close();
   });
 
@@ -106,5 +134,28 @@ describe("MCP alati za vodu", () => {
     assert.equal(r.isError, true);
     assert.equal(tekst(r), "Baza trenutno nije dostupna.");
     await k.close();
+  });
+});
+
+describe("sažetak istorije vode", () => {
+  const m = (temperaturaC: number | null, ph: number | null) => ({
+    uredjajId: "fishnet-1",
+    vreme: "2023-01-23T01:00:00+01:00",
+    temperaturaC,
+    ph,
+    orp: null,
+    dox: null,
+    con: null,
+    doxZasicenje: null,
+    dco2: null,
+  });
+
+  test("prva → poslednja vrednost i raspon; veličina bez vrednosti se izostavlja", () => {
+    const s = sazetakIstorijeVode([m(21.24, 5.34), m(20.85, 5.33), m(22.08, 5.35)]);
+    assert.equal(s, "temperatura 21,24 → 22,08 °C (najmanje 20,85, najviše 22,08); pH 5,34 → 5,35 (najmanje 5,33, najviše 5,35)");
+  });
+
+  test("null se ne računa kao 0", () => {
+    assert.equal(sazetakIstorijeVode([m(null, 7), m(10, 7)]), "temperatura 10 → 10 °C (najmanje 10, najviše 10); pH 7 → 7 (najmanje 7, najviše 7)");
   });
 });

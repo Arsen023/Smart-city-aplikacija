@@ -19,6 +19,8 @@ import { GreskaEkonet } from "../core/ekonet/index.js";
 import { JEDINICA_PM, type Merenje, type Velicina } from "../core/tipovi.js";
 import { isoBeograd, prikazDatumVreme } from "../core/vreme.js";
 import {
+  idIliPrvi,
+  opcionaStanicaSema,
   porukaGreske,
   proceniKvalitet,
   rezultatGreske,
@@ -146,11 +148,12 @@ export function registrujAlate(server: McpServer, dobijZavisnosti: DobijZavisnos
         "Answers whether it is a good time for a walk or outdoor training at a station: latest PM2.5/PM10, " +
         "EAQI category, 24 h history and a short advice. Call when the user asks about air quality or going outside.",
       inputSchema: {
-        stationId: stationIdSema.optional().describe("Station id from get_stations. If omitted, the first station is used."),
+        stationId: opcionaStanicaSema,
       },
       _meta: { ui: { resourceUri: UI_A_RESOURCE_URI } },
     },
-    async ({ stationId }) => {
+    async ({ stationId: ulaz }) => {
+      const stationId = idIliPrvi(ulaz);
       let zavisnosti: ZavisnostiProcene;
       try {
         zavisnosti = await dobijZavisnosti();

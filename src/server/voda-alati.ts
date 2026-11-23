@@ -9,10 +9,27 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { GreskaBaze, type BazaVode, type MerenjeVode } from "../core/baza/index.js";
 import { prikazDatumVreme } from "../core/vreme.js";
+import { protekloVreme } from "../zajednicko/format.js";
 
 export type DobijBazu = () => Promise<BazaVode>;
 
-const uredjajIdSema = z.string().trim().min(1).describe('Water device id from get_water_devices, e.g. "fishnet-1".');
+/**
+ * Id uređaja nije obavezan. Prihvata i "" i null: modeli tako kažu „ne znam id“, a Groq proverava
+ * poziv prema ovoj šemi – stroža šema (minLength 1) je davala tool_use_failed.
+ */
+const uredjajIdSema = z
+  .string()
+  .nullish()
+  .describe('Water device id from get_water_devices, e.g. "fishnet-1". Omit it (or leave empty) to use the first device.');
+
+/** Uređaj iz argumenta, ili prvi iz baze kad ga model ne navede. */
+async function izaberiUredjaj(baza: BazaVode, deviceId: string | null | undefined): Promise<string> {
+  const id = deviceId?.trim();
+  if (id) return id;
+  const [prvi] = await baza.uredjaji();
+  if (!prvi) throw new GreskaBaze("nepoznat_uredjaj", "U bazi nema uređaja za vodu.");
+  return prvi.id;
+}
 
 function tekst(t: string): CallToolResult["content"] {
   return [{ type: "text", text: t }];
@@ -44,6 +61,31 @@ export function tekstMerenjaVode(m: MerenjeVode): string {
   );
 }
 
+type VelicinaVode = "temperaturaC" | "ph" | "orp" | "dox" | "doxZasicenje" | "con" | "dco2";
+const VELICINE_VODE: { kljuc: VelicinaVode; naziv: string; jedinica: string }[] = [
+  { kljuc: "temperaturaC", naziv: "temperatura", jedinica: " °C" },
+  { kljuc: "ph", naziv: "pH", jedinica: "" },
+  { kljuc: "dox", naziv: "kiseonik", jedinica: " mg/L" },
+  { kljuc: "doxZasicenje", naziv: "zasićenje kiseonikom", jedinica: " %" },
+  { kljuc: "orp", naziv: "ORP", jedinica: " mV" },
+  { kljuc: "con", naziv: "provodljivost", jedinica: "" },
+  { kljuc: "dco2", naziv: "CO2", jedinica: "" },
+];
+
+/**
+ * Sažetak istorije za model: za svaku veličinu prva → poslednja vrednost i raspon,
+ * da AI može da opiše promenu bez slanja svih merenja (štedi tokene).
+ */
+export function sazetakIstorijeVode(merenja: MerenjeVode[]): string {
+  return VELICINE_VODE.flatMap(({ kljuc, naziv, jedinica }) => {
+    const vr = merenja.map((m) => m[kljuc]).filter((x): x is number => x !== null);
+    if (vr.length === 0) return [];
+    const min = Math.min(...vr);
+    const max = Math.max(...vr);
+    return [`${naziv} ${v(vr[0]!)} → ${v(vr.at(-1)!, jedinica)} (najmanje ${v(min)}, najviše ${v(max)})`];
+  }).join("; ");
+}
+
 export function registrujAlateVode(server: McpServer, dobijBazu: DobijBazu): void {
   server.registerTool(
     "get_water_devices",
@@ -70,14 +112,22 @@ export function registrujAlateVode(server: McpServer, dobijBazu: DobijBazu): voi
     "get_water_latest",
     {
       title: "Poslednje merenje vode",
-      description: "Returns the latest stored water-quality measurement for a device (temperature, pH, ORP, oxygen…).",
+      description:
+        "Latest water-quality measurement (FishNET sensor in water): water temperature, pH, ORP, dissolved oxygen and " +
+        "saturation, conductivity, CO2, with measurement time. Use for any question about water quality.",
       inputSchema: { deviceId: uredjajIdSema },
     },
     async ({ deviceId }) => {
       try {
-        const m = await (await dobijBazu()).poslednjeMerenje(deviceId);
+        const baza = await dobijBazu();
+        deviceId = await izaberiUredjaj(baza, deviceId);
+        const m = await baza.poslednjeMerenje(deviceId);
         return {
-          content: tekst(m ? `${deviceId}, ${tekstMerenjaVode(m)}.` : `${deviceId}: nema merenja u bazi.`),
+          content: tekst(
+            m
+              ? `${deviceId}, ${tekstMerenjaVode(m)} (${protekloVreme(m.vreme, new Date())}).`
+              : `${deviceId}: nema merenja u bazi.`,
+          ),
           structuredContent: { deviceId, merenje: m },
         };
       } catch (e) {
@@ -91,7 +141,8 @@ export function registrujAlateVode(server: McpServer, dobijBazu: DobijBazu): voi
     {
       title: "Istorija merenja vode",
       description:
-        "Returns stored water-quality measurements for a device over `hours` hours before its latest measurement (default 24).",
+        "Water-quality measurements over `hours` hours before the device's latest measurement (default 24). " +
+        "Use for trends (how water temperature, pH or oxygen changed).",
       inputSchema: {
         deviceId: uredjajIdSema,
         hours: z.number().int().min(1).max(168).default(24).describe("How many hours back, 1–168. Default 24."),
@@ -99,12 +150,17 @@ export function registrujAlateVode(server: McpServer, dobijBazu: DobijBazu): voi
     },
     async ({ deviceId, hours }) => {
       try {
-        const merenja = await (await dobijBazu()).istorija(deviceId, hours);
+        const baza = await dobijBazu();
+        deviceId = await izaberiUredjaj(baza, deviceId);
+        const merenja = await baza.istorija(deviceId, hours);
         const raspon = merenja.length
           ? `, od ${prikazDatumVreme(new Date(merenja[0]!.vreme))} do ${prikazDatumVreme(new Date(merenja.at(-1)!.vreme))}`
           : "";
         return {
-          content: tekst(`${deviceId}: ${merenja.length} merenja za ${hours} h${raspon}.`),
+          content: tekst(
+            `${deviceId}: ${merenja.length} merenja za ${hours} h${raspon}.` +
+              (merenja.length ? ` Promena: ${sazetakIstorijeVode(merenja)}.` : ""),
+          ),
           structuredContent: { deviceId, hours, merenja },
         };
       } catch (e) {
