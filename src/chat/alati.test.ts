@@ -28,20 +28,23 @@ const SVI = [
   alat("osvezi_a2ui", ["app"]),
   alat("get_weather"),
   alat("get_dashboard", ["app"]),
+  alat("get_water_devices"),
+  alat("get_water_latest"),
+  alat("get_water_history"),
 ];
 
 describe("alati za verziju", () => {
-  test("A: spisak stanica + assess_air_quality + vreme, bez dashboard-a", () => {
+  test("A: spisak stanica + assess_air_quality + vreme + voda, bez dashboard-a", () => {
     assert.deepEqual(
       alatiZaVerziju(SVI, "A").map((a) => a.name),
-      ["get_stations", "assess_air_quality", "get_weather"],
+      ["get_stations", "assess_air_quality", "get_weather", "get_water_devices", "get_water_latest", "get_water_history"],
     );
   });
 
   test("B: spisak stanica + assess_air_quality_a2ui, bez alata samo za ekran", () => {
     assert.deepEqual(
       alatiZaVerziju(SVI, "B").map((a) => a.name),
-      ["get_stations", "assess_air_quality_a2ui", "get_weather"],
+      ["get_stations", "assess_air_quality_a2ui", "get_weather", "get_water_devices", "get_water_latest", "get_water_history"],
     );
   });
 
@@ -117,6 +120,16 @@ describe("sistemska poruka i argumenti", () => {
     assert.doesNotMatch(a, /assess_air_quality_a2ui/);
     assert.match(b, /assess_air_quality_a2ui/);
     assert.match(a, /Kategoriju nikad ne računaš sam/);
+  });
+
+  test("voda: pominje alate za vodu, bez ocene da li je voda za piće", () => {
+    for (const v of ["A", "B"] as const) {
+      const s = sistemskaPoruka(v);
+      assert.match(s, /get_water_latest/);
+      assert.match(s, /kvalitet vode/);
+      assert.match(s, /ne ocenjuj da li je voda dobra, bezbedna ili za piće/);
+      assert.doesNotMatch(s, /pomažeš samo oko kvaliteta vazduha/);
+    }
   });
 
   test("argumenti poziva: ispravan JSON, prazno, neispravno", () => {

@@ -20,7 +20,15 @@ import type { Rezultat, Stanica } from "../core/tipovi.js";
 import { napraviGeneratorRasporeda, type AiRasporedA2ui, type GeneratorRasporeda } from "./a2ui-ai.js";
 import { a2uiResurs, porukeAzuriranja, porukeEkrana } from "./a2ui.js";
 import type { DobijZavisnosti } from "./alati.js";
-import { porukaGreske, proceniKvalitet, rezultatGreske, tekstRezultata, type ZavisnostiProcene } from "./procena.js";
+import {
+  idIliPrvi,
+  opcionaStanicaSema,
+  porukaGreske,
+  proceniKvalitet,
+  rezultatGreske,
+  tekstRezultata,
+  type ZavisnostiProcene,
+} from "./procena.js";
 
 const DIST_DIR = path.join(import.meta.dirname, "..", "..", "dist");
 export const UI_B_RESOURCE_URI = "ui://air/dashboard-a2ui";
@@ -100,13 +108,13 @@ export function registrujA2ui(server: McpServer, dobijZavisnosti: DobijZavisnost
         "Same as assess_air_quality (latest PM2.5/PM10, EAQI category, 24 h history, short advice), " +
         "but the screen is rendered with A2UI (version B). The layout can be composed by AI on the user's request (parameter prikaz).",
       inputSchema: {
-        stationId: stationIdSema.optional().describe("Station id from get_stations. If omitted, the first station is used."),
+        stationId: opcionaStanicaSema,
         prikaz: prikazSema.optional(),
       },
       _meta: { ui: { resourceUri: UI_B_RESOURCE_URI, visibility: ["model", "app"] } },
     },
     async ({ stationId, prikaz }): Promise<CallToolResult> => {
-      const { r, stanice, sada } = await proceni(dobijZavisnosti, stationId);
+      const { r, stanice, sada } = await proceni(dobijZavisnosti, idIliPrvi(stationId));
       const raspored = await rasporedZa(r, prikaz, generator);
       return {
         content: [

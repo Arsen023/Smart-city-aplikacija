@@ -45,6 +45,12 @@ Poslednje ažuriranje: 2026-11-19 (Luka)
 8. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 
 ## Dnevnik
+### 2026-11-23 – Sara – chat: voda i bolji odgovori
+- Chat nije nudio modelu alate za vodu, a sistemska poruka je govorila „samo kvalitet vazduha“. Sada model vidi `get_water_devices`, `get_water_latest`, `get_water_history` u obe verzije.
+- Nova sistemska poruka po temama (vazduh, vreme, voda, stil): više tema u jednom pitanju, decimalni zarez, jasna poruka kad podaci nisu dostupni; za vodu samo vrednosti i vreme, bez ocene da li je voda bezbedna (nema pravila za vodu).
+- Alati za vodu: `deviceId` opcion (prvi uređaj), tekst sa starošću merenja („pre N dana“) i sažetak istorije (prva → poslednja vrednost, najmanje/najviše).
+- Predlog pitanja „Kakav je kvalitet vode?“ u chatu. 323 testa.
+
 ### 2026-11-20 – Sara – baza za kvalitet vode
 - Od DunavNET-a stigla FishNET kolekcija (`currentdata`, `historydata`): merenja **vode** (temperatura, pH, ORP, kiseonik, provodljivost, CO2), ne PM2.5/PM10.
 - `db/01-sema.sql` (tabele `uredjaj`, `merenje_vode`, provere, indeks), `db/02-istorija.sql` (136 merenja; 100 praznih zapisa izostavljeno). Vreme upisano kao UTC – potvrditi.

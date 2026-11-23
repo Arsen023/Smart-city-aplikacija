@@ -110,6 +110,19 @@ describe("MCP alati (demo s1-dobar)", () => {
     assert.match(tekstIz(r), new RegExp(`Kategorija: ${sc.category.naziv}`));
   });
 
+  test("assess_air_quality: stationId kao \"\", razmaci ili null znači prvu stanicu (ne grešku)", async () => {
+    for (const stationId of ["", "  ", null]) {
+      const r = await pozovi(k, "assess_air_quality", { stationId });
+      const sc = r.structuredContent as { status: string; station: { id: string } };
+      assert.notEqual(r.isError, true, `stationId=${JSON.stringify(stationId)}`);
+      assert.equal(sc.station.id, "demo-liman");
+      assert.notEqual(sc.status, "error");
+    }
+    const { tools } = await k.listTools();
+    const sema = JSON.stringify(tools.find((t) => t.name === "assess_air_quality")?.inputSchema.properties?.stationId);
+    assert.doesNotMatch(sema, /minLength/);
+  });
+
   test("assess_air_quality: „sada“ servera u _meta (za „pre X min“ u ekranu A)", async () => {
     const r = await pozovi(k, "assess_air_quality", {});
     const sada = r._meta?.[META_SADA];
