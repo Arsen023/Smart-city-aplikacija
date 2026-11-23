@@ -6,7 +6,9 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { ActionPayload } from "@a2ui/web_core/v0_9";
 import {
+  ALAT_PROCENE,
   alatiZaVerziju,
   argumentiPoziva,
   jeGreskaProcene,
@@ -18,7 +20,15 @@ import {
   type McpAlat,
   type Verzija,
 } from "../alati.js";
+import { a2uiIzRezultata, prikaziA2ui, type A2uiIzAlata } from "./a2ui-prikaz.js";
 import { imaEkran, prikaziEkran } from "./ekran.js";
+
+type Komponenta = { id: string; component: string } & Record<string, unknown>;
+interface OdgovorChata {
+  poruka: ChatPoruka;
+  /** Samo u verziji B, uz konačan odgovor: raspored koji je sastavio AI (null = rezervni ekran). */
+  a2ui?: { komponente: Komponenta[] | null; razlog?: string };
+}
 
 const razgovor = document.getElementById("razgovor") as HTMLElement;
 const forma = document.getElementById("forma") as HTMLFormElement;
@@ -79,16 +89,71 @@ function zauzeto(da: boolean) {
 
 // ─── Razgovor ───────────────────────────────────────────────────────────────
 
-async function pitajModel(v: Verzija): Promise<ChatPoruka> {
+async function pitajModel(v: Verzija): Promise<OdgovorChata> {
   const ponudjeni = alatiZaVerziju(alati as McpAlat[], v).map(uChatAlat);
   const odgovor = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ verzija: v, poruke, alati: ponudjeni, kontekst: kontekstEkrana ?? undefined }),
+    body: JSON.stringify({
+      verzija: v,
+      poruke,
+      alati: ponudjeni,
+      kontekst: kontekstEkrana ?? undefined,
+      a2uiPodaci: v === "B" && procitajA2ui() !== null,
+    }),
   });
-  const telo = (await odgovor.json()) as { poruka?: ChatPoruka; greska?: string };
+  const telo = (await odgovor.json()) as Partial<OdgovorChata> & { greska?: string };
   if (!odgovor.ok || !telo.poruka) throw new Error(telo.greska ?? "AI trenutno nije dostupan.");
-  return telo.poruka;
+  return { poruka: telo.poruka, a2ui: telo.a2ui };
+}
+
+// ─── Verzija B: izvorni A2UI ────────────────────────────────────────────────
+
+/** Podaci i rezervni raspored iz poslednjeg poziva alata verzije B u ovom pitanju. */
+type PodaciB = { izAlata: A2uiIzAlata; argumenti: Record<string, unknown> };
+let poslednjiA2ui: PodaciB | null = null;
+const procitajA2ui = (): PodaciB | null => poslednjiA2ui;
+
+function stanicaIzAkcije(akcija: ActionPayload | null, podrazumevana: unknown): string | undefined {
+  const izbor = akcija?.context.izbor;
+  const prvi = Array.isArray(izbor) ? izbor[0] : izbor;
+  if (typeof prvi === "string" && prvi) return prvi;
+  return typeof podrazumevana === "string" ? podrazumevana : undefined;
+}
+
+/** Crta ekran verzije B u razgovoru: raspored od AI-ja (ili rezervni), podaci iz MCP alata. */
+function prikaziVerzijuB(izAlata: A2uiIzAlata, argumenti: Record<string, unknown>, aiKomponente: Komponenta[] | null) {
+  // Za stale / no_data / error uvek fiksni ekran sa porukom (FR-09).
+  const koristiAi = izAlata.status === "ok" && aiKomponente !== null;
+  const blok = dodaj("ekran-blok");
+  const oznaka = document.createElement("div");
+  oznaka.className = "oznaka oznaka-b";
+  oznaka.textContent = `${OPIS_VERZIJE.B} · ${koristiAi ? "ekran složio AI" : "standardni ekran"}`;
+  blok.appendChild(oznaka);
+  const povrsina = document.createElement("div");
+  povrsina.className = "a2ui-povrsina";
+  blok.appendChild(povrsina);
+
+  const osvezi = async (akcija: ActionPayload | null) => {
+    if (!klijent) return;
+    const stationId = stanicaIzAkcije(akcija, argumenti.stationId);
+    const r = (await klijent.callTool({ name: ALAT_PROCENE.B, arguments: stationId ? { stationId } : {} })) as CallToolResult;
+    const novi = a2uiIzRezultata(r);
+    if (novi) ekran.azurirajPodatke(novi.podaci);
+  };
+  const ekran = prikaziA2ui(povrsina, koristiAi ? (aiKomponente as Komponenta[]) : izAlata.komponente, izAlata.podaci, (a) =>
+    osvezi(a),
+  );
+
+  // AI raspored nema svoje dugme – „Osveži“ je deo chata, van A2UI ekrana (FR-15).
+  if (koristiAi) {
+    const dugmeOsvezi = Object.assign(document.createElement("button"), { type: "button", className: "osvezi", textContent: "Osveži" });
+    dugmeOsvezi.addEventListener("click", () => {
+      dugmeOsvezi.disabled = true;
+      void osvezi(null).finally(() => (dugmeOsvezi.disabled = false));
+    });
+    blok.appendChild(dugmeOsvezi);
+  }
 }
 
 /** Rezultati alata u okviru jednog pitanja – isti poziv dvaput ne pravi drugi ekran. */
@@ -110,6 +175,13 @@ async function pozoviAlatPrviPut(ime: string, argumenti: Record<string, unknown>
 
   const rezultat = klijent.callTool({ name: ime, arguments: argumenti }) as Promise<CallToolResult>;
   const gotov = await rezultat;
+
+  // Verzija B: bez iframe-a – pamte se podaci i rezervni raspored; ekran se crta uz odgovor AI-ja.
+  if (v === "B" && ime === ALAT_PROCENE.B) {
+    const izAlata = jeGreskaProcene(gotov) ? null : a2uiIzRezultata(gotov);
+    if (izAlata) poslednjiA2ui = { izAlata, argumenti };
+    return tekstZaModel(gotov);
+  }
 
   // Ekran tek kad stigne rezultat, i samo ako nije greška (npr. pogrešan id stanice) –
   // tada model pokuša ponovo, a u razgovoru ne ostaje prazan ekran. Stale / no_data se prikazuju.
@@ -140,6 +212,7 @@ async function pozoviAlatPrviPut(ime: string, argumenti: Record<string, unknown>
 async function posalji(tekst: string) {
   const v = verzija();
   pozivi = new Map();
+  poslednjiA2ui = null;
   dodaj("korisnik", tekst);
   poruke.push({ role: "user", content: tekst });
   zauzeto(true);
@@ -147,11 +220,17 @@ async function posalji(tekst: string) {
 
   try {
     for (let korak = 0; korak < MAX_KORAKA; korak++) {
-      const odgovor = await pitajModel(v);
+      const { poruka: odgovor, a2ui } = await pitajModel(v);
       poruke.push({ role: "assistant", content: odgovor.content ?? null, tool_calls: odgovor.tool_calls });
 
       if (!odgovor.tool_calls?.length) {
         kuca.remove();
+        // poslednjiA2ui postavlja pozoviAlatPrviPut (TypeScript to ne vidi kroz await), zato čitanje preko funkcije.
+        const zaB = procitajA2ui();
+        if (v === "B" && zaB) {
+          if (a2ui?.razlog) console.info("[chat] A2UI rezervni ekran:", a2ui.razlog);
+          prikaziVerzijuB(zaB.izAlata, zaB.argumenti, a2ui?.komponente ?? null);
+        }
         dodaj("asistent", odgovor.content || "…");
         return;
       }

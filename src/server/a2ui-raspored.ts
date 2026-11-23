@@ -12,23 +12,11 @@
  * Ako bilo šta ne prođe proveru, koristi se fiksni ekran.
  */
 import { z } from "zod";
-import { KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA } from "../zajednicko/a2ui-katalog.js";
+import { KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA, PUTANJE_PODATAKA } from "../zajednicko/a2ui-katalog.js";
 
-/** Putanje podataka koje AI sme da prikaže, sa opisom za prompt. */
-export const PUTANJE: Record<string, string> = {
-  "/stanica": "naziv stanice",
-  "/pm25Broj": "vrednost PM2.5 (broj ili „nije dostupno“)",
-  "/pm25Jedinica": "jedinica za PM2.5 (µg/m³)",
-  "/pm10Broj": "vrednost PM10 (broj ili „nije dostupno“)",
-  "/pm10Jedinica": "jedinica za PM10 (µg/m³)",
-  "/pm25": "PM2.5 sa nazivom i jedinicom u jednom tekstu",
-  "/pm10": "PM10 sa nazivom i jedinicom u jednom tekstu",
-  "/vreme": "vreme merenja i koliko je prošlo",
-  "/napomena": "napomena kad neka veličina nije dostupna",
-  "/savet": "savet za šetnju i trening (uz njega uvek ide i /osnov)",
-  "/osnov": "na čemu se savet zasniva",
-  "/pravilo": "pravilo po kome je izračunata kategorija",
-};
+/** Putanje podataka koje AI sme da prikaže (zajedničke sa chatom, src/zajednicko/a2ui-katalog.ts). */
+export const PUTANJE = PUTANJE_PODATAKA;
+
 
 export const TIPOVI = ["Kolona", "Red", "Kartica", "Tekst", "Kategorija", "Grafikon", "Razdelnik"] as const;
 export const STILOVI = ["h1", "h2", "h3", "h4", "h5", "body", "caption"] as const;
