@@ -11,6 +11,14 @@ import { SQL, uIso, uMerenje, uUredjaj } from "./upiti.js";
 
 export { GreskaBaze, type KodGreskeBaze } from "./greske.js";
 export type { BazaVode, MerenjeVode, UredjajVode } from "./tipovi.js";
+export {
+  napraviBazuVazduhaIVremena,
+  UREDJAJ_VREMENA,
+  type BazaVazduhaIVremena,
+  type RedVazduhaIzBaze,
+  type RedVremenaIzBaze,
+  type UredjajVazduha,
+} from "./vazduh-vreme.js";
 
 /** Izvršava parametrizovan upit ($1, $2…) i vraća redove. */
 export type IzvrsiUpit = (sql: string, parametri?: unknown[]) => Promise<{ rows: unknown[] }>;

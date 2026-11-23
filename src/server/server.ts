@@ -1,7 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registrujA2ui } from "./a2ui-alati.js";
 import { registrujAlate, type DobijZavisnosti } from "./alati.js";
-import { poveziBazu, type BazaVode } from "../core/baza/index.js";
+import {
+  napraviBazuVazduhaIVremena,
+  poveziBazu,
+  poveziVezu,
+  type BazaVazduhaIVremena,
+  type BazaVode,
+} from "../core/baza/index.js";
+import { registrujAlateDashboarda, type DobijBazuVV } from "./dashboard-alati.js";
 import { registrujAlateVode, type DobijBazu } from "./voda-alati.js";
 import { zavisnostiIzOkruzenja, type ZavisnostiProcene } from "./procena.js";
 
@@ -21,6 +28,16 @@ const dobijBazu: DobijBazu = () =>
     throw e;
   }));
 
+/** Vazduh i vreme iz baze (db/03-vazduh-vreme.sql) – za dashboard i get_weather. Neuspeh se ne pamti. */
+let bazaVV: Promise<BazaVazduhaIVremena> | undefined;
+const dobijBazuVV: DobijBazuVV = () =>
+  (bazaVV ??= poveziVezu()
+    .then((veza) => napraviBazuVazduhaIVremena(veza.izvrsi))
+    .catch((e: unknown) => {
+      bazaVV = undefined;
+      throw e;
+    }));
+
 /**
  * Pravi novu instancu MCP servera sa svim alatima i ui:// resursima.
  */
@@ -38,6 +55,9 @@ export function createServer(): McpServer {
 
   // Kvalitet vode iz PostgreSQL baze (FishNET, db/): get_water_devices, get_water_latest, get_water_history (Sara)
   registrujAlateVode(server, dobijBazu);
+
+  // Dashboard (sve u jednom pozivu) i vreme iz baze: get_dashboard, get_weather (Luka)
+  registrujAlateDashboarda(server, dobijZavisnosti, dobijBazuVV, dobijBazu);
 
   return server;
 }

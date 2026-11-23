@@ -131,7 +131,13 @@ async function izaberiStanicu(klijent: EkonetKlijent, stationId?: string): Promi
 // ─── Glavni tok ────────────────────────────────────────────────────────────
 
 /** Ceo tok assess_air_quality. Nikad ne baca izuzetak: greška postaje status "error" (NFR-05). */
-export async function proceniKvalitet(z: ZavisnostiProcene, stationId?: string): Promise<Rezultat> {
+export async function proceniKvalitet(
+  z: ZavisnostiProcene,
+  stationId?: string,
+  /** `savet: false` – bez K3 (npr. dashboard i mapa: samo merenja i kategorija, bez LLM poziva). */
+  opcije: { savet?: boolean } = {},
+): Promise<Rezultat> {
+  const saSavetom = opcije.savet !== false;
   const log = z.log ?? ((p: string) => console.error(p));
   let stanica: { id: string; naziv: string } = { id: stationId ?? "", naziv: stationId ?? "nepoznata stanica" };
 
@@ -158,13 +164,14 @@ export async function proceniKvalitet(z: ZavisnostiProcene, stationId?: string):
     };
 
     // K3 samo kad je status "ok" (pravilo 2). Za stale / no_data nema poziva LLM-a.
-    const advice = procena.status === "ok" && procena.category ? await z.napraviSavet(bezSaveta) : null;
+    const advice =
+      saSavetom && procena.status === "ok" && procena.category ? await z.napraviSavet(bezSaveta) : null;
 
     return {
       ...bezSaveta,
       history: satneVrednosti(istorija),
       advice,
-      message: procena.status === "ok" && advice === null ? PORUKA_BEZ_SAVETA : bezSaveta.message,
+      message: saSavetom && procena.status === "ok" && advice === null ? PORUKA_BEZ_SAVETA : bezSaveta.message,
     };
   } catch (e) {
     log(`[server] assess_air_quality greška: ${razlogZaLog(e)}`);
