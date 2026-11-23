@@ -29,7 +29,8 @@ Poslednje ažuriranje: 2026-11-19 (Luka)
 | — | Zajednički folder `src/zajednicko/` (EAQI boje, ID A2UI kataloga) | Luka | Gotovo | `luka/zajednicko` | #11 | 2026-11-18 |
 | — | CI (GitHub Actions: typecheck, test, build) | Sara | Gotovo | `sara/ci` | #14 | 2026-11-18 |
 | — | Chat aplikacija (sopstveni MCP host, prekidač A/B) za demo | Luka | Gotovo | `luka/chat` | #15 | 2026-11-18 |
-| — | Verzija B: AI raspored po želji korisnika (A2UI iz kataloga) | Luka | U pregledu | `luka/a2ui-ai` | — | 2026-11-19 |
+| — | Verzija B: AI raspored po želji korisnika (A2UI iz kataloga) | Luka | Gotovo | `luka/a2ui-ai` | #18 | 2026-11-19 |
+| — | Verzija B u chatu kao izvorni A2UI (AI sastavlja ekran, bez iframe-a) | Luka | U pregledu | `luka/a2ui-chat` | — | 2026-11-20 |
 | — | Snimci ekrana A za S1–S6 (`docs/snimci/`) | Sara | Nije početo | `sara/ui-a` | — | — |
 
 ## Sledeći koraci
@@ -129,6 +130,8 @@ Poslednje ažuriranje: 2026-11-19 (Luka)
 | 2026-11-17 | LLM: Groq; podrazumevani model `openai/gpt-oss-120b`, menja se preko `GROQ_MODEL` (isproban i `qwen/qwen3.8-27b`) | `llama-3.3-70b-versatile` nije dostupan sa ključem; oba modela prošla proveru | Luka |
 | 2026-11-17 | A2UI protokol v0.9 | Lit renderer `@a2ui/lit` 0.15 podržava v0.9, ne v1.0 | Luka |
 | 2026-11-18 | Kategorija u boji i grafikon kao sopstvene komponente u našem A2UI katalogu | Osnovni katalog nema boju teksta ni grafikon (T05) | Luka |
+| 2026-11-20 | Verzija B u našem chatu je izvorni A2UI (AI sastavlja ekran, chat ga crta bez iframe-a); A = obična MCP aplikacija | Po A2UI dokumentaciji to je podrazumevani put kad je host naš; mentor: „MCP app protokol, odnosno A2UI protokol“. MCP App + A2UI (`src/ui-b/`) ostaje za hostove kao Claude Desktop. Potvrditi sa mentorom (spec 8.3) | Luka |
+| 2026-11-20 | Zvanični A2UI SDK za agente `@a2ui/agent` (0.1.0) | Gradi uputstvo iz kataloga i proverava AI odgovor; rana verzija – rezerva je fiksni ekran | Luka |
 | 2026-11-19 | Verzija B dobija i AI raspored po želji korisnika (pored fiksnog ekrana) | Pokazuje glavnu razliku mehanizma: LLM sastavlja ekran od dozvoljenih komponenti bez izvršavanja koda – u verziji A to bezbedno ne može. Odstupanje od spec 8.3 (bez LLM-a) samo za raspored; podaci i kategorija i dalje samo sa servera | Luka |
 | 2026-11-18 | Demo kroz sopstvenu chat aplikaciju (`src/chat/`), ne kroz Claude/VS Code | Mentor očekuje aplikaciju sa chatom; ne zavisimo od tuđeg naloga. Odstupanje od spec (host je bio npr. Claude) – potvrditi sa mentorom | Luka |
 | 2026-11-18 | Google Stitch koristimo kao vizuelni predložak, ne kao generator A2UI komponenti | A2UI pravi server deterministički iz `Rezultat`-a (spec 8.3); bez strogog prompta Stitch izmišlja sadržaj (T05) | Luka |

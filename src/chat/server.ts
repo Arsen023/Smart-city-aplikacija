@@ -12,7 +12,12 @@
 import express, { type Request, type Response } from "express";
 import path from "node:path";
 import { z } from "zod";
-import { sistemskaPoruka } from "./alati.js";
+import { obradiOdgovor, napraviProcesor } from "./a2ui-agent.js";
+import { sazmiZaA2ui, sistemskaPoruka, trebaA2uiUputstvo } from "./alati.js";
+
+/** A2UI procesor (zvanični SDK) – pravi se jednom, katalog se ne menja. */
+let a2uiProcesor: ReturnType<typeof napraviProcesor> | undefined;
+const dobijA2ui = () => (a2uiProcesor ??= napraviProcesor());
 
 try {
   process.loadEnvFile();
@@ -26,6 +31,11 @@ const SANDBOX_PORT = Number.parseInt(process.env.CHAT_SANDBOX_PORT ?? String(CHA
 const MCP_URL = process.env.CHAT_MCP_URL || "http://localhost:3001/mcp";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+/**
+ * Model za korak u kome AI sastavlja A2UI ekran (verzija B). Poseban model ima poseban Groq limit
+ * (besplatni nivo: 8000 tokena/min po modelu), pa se ne troši limit chat modela i K3 saveta.
+ */
+const A2UI_MODEL = process.env.GROQ_A2UI_MODEL || "openai/gpt-oss-120b";
 const TIMEOUT_MS = 20_000;
 
 const DIST = path.join(import.meta.dirname, "..", "..", "dist");
@@ -58,6 +68,8 @@ const ZahtevSema = z.object({
     .max(10),
   /** Šta korisnik trenutno gleda na ekranu (ui/update-model-context), ako postoji. */
   kontekst: z.string().max(4000).optional(),
+  /** Verzija B: chat stranica ima ispravne A2UI podatke iz alata (procena nije greška). */
+  a2uiPodaci: z.boolean().optional(),
 });
 
 const OdgovorGroqSema = z.object({
@@ -94,18 +106,27 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     return;
   }
 
-  const { verzija, poruke, alati, kontekst } = ulaz.data;
+  const { verzija, poruke, alati, kontekst, a2uiPodaci } = ulaz.data;
   const sistem = [{ role: "system" as const, content: sistemskaPoruka(verzija) }];
   if (kontekst) sistem.push({ role: "system", content: `Šta korisnik trenutno gleda na ekranu: ${kontekst}` });
+  // Samo kad je procena uspela – posle greške (npr. pogrešan id stanice) model normalno pokuša ponovo.
+  const sastaviEkran = a2uiPodaci === true && trebaA2uiUputstvo(verzija, poruke);
+  if (sastaviEkran) {
+    sistem.push({
+      role: "system",
+      content:
+        "Sada odgovori: najviše 2 rečenice teksta, pa ekran u JEDNOM <a2ui> bloku po pravilima ispod. " +
+        "Podatke ne upisuj – samo ih veži preko putanja.\n\n" +
+        dobijA2ui().promptSnippet,
+    });
+  }
 
-  const telo = JSON.stringify({
-    model: MODEL,
-    messages: [...sistem, ...poruke],
-    tools: alati,
-    tool_choice: "auto",
-    temperature: 0.2,
-    max_tokens: 1024,
-  });
+  // Korak sa A2UI ekranom: sažet razgovor (pitanje + rezultat procene), bez alata – vidi sazmiZaA2ui.
+  const telo = JSON.stringify(
+    sastaviEkran
+      ? { model: A2UI_MODEL, messages: [...sistem, ...sazmiZaA2ui(poruke)], temperature: 0.2, max_tokens: 1500 }
+      : { model: MODEL, messages: [...sistem, ...poruke], tools: alati, tool_choice: "auto", temperature: 0.2, max_tokens: 1024 },
+  );
 
   const pocetak = Date.now();
   try {
@@ -139,13 +160,58 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       return;
     }
     const poruka = OdgovorGroqSema.parse(await odgovor.json()).choices[0].message;
-    console.log(`[chat] ${MODEL}, ${Date.now() - pocetak} ms, ${poruka.tool_calls?.length ? `alati: ${poruka.tool_calls.map((p) => p.function.name).join(", ")}` : "odgovor"}`);
+    console.log(`[chat] ${sastaviEkran ? A2UI_MODEL : MODEL}, ${Date.now() - pocetak} ms, ${poruka.tool_calls?.length ? `alati: ${poruka.tool_calls.map((p) => p.function.name).join(", ")}` : "odgovor"}`);
+    // Verzija B: tekst + A2UI ekran iz istog odgovora (SDK + naše provere).
+    if (sastaviEkran && !poruka.tool_calls?.length && poruka.content) {
+      let o = obradiOdgovor(dobijA2ui(), poruka.content);
+      // Jedan pokušaj ispravke: AI dobija razlog odbijanja (kako preporučuje A2UI dokumentacija).
+      if (!o.komponente && o.razlog && !o.razlog.startsWith("AI nije poslao")) {
+        console.log(`[chat] A2UI odbijen (${o.razlog}), traži se ispravka`);
+        const ispravka = await ispraviA2ui(JSON.parse(telo) as Record<string, unknown>, poruka.content, o.razlog, kljuc);
+        if (ispravka) {
+          const o2 = obradiOdgovor(dobijA2ui(), ispravka);
+          if (o2.komponente) o = { ...o2, tekst: o2.tekst || o.tekst };
+        }
+      }
+      console.log(`[chat] A2UI: ${o.komponente ? `ekran od ${o.komponente.length} komponenti` : `rezervni ekran (${o.razlog})`}`);
+      res.json({ poruka: { role: "assistant", content: o.tekst || null }, a2ui: { komponente: o.komponente, razlog: o.razlog } });
+      return;
+    }
     res.json({ poruka: { role: "assistant", content: poruka.content ?? null, tool_calls: poruka.tool_calls } });
   } catch (e) {
     console.error(`[chat] greška posle ${Date.now() - pocetak} ms: ${e instanceof Error ? e.message : "nepoznata"}`);
     res.status(502).json({ greska: "AI trenutno nije dostupan. Pokušajte ponovo." });
   }
 });
+
+/** Jedan dodatni poziv: isti zahtev + neispravan odgovor + razlog → ispravljen odgovor (ili null). */
+async function ispraviA2ui(zahtev: Record<string, unknown>, prethodni: string, razlog: string, kljuc: string): Promise<string | null> {
+  const poruke = [
+    ...(zahtev.messages as unknown[]),
+    { role: "assistant", content: prethodni },
+    {
+      role: "user",
+      content:
+        `Ekran nije prošao proveru: ${razlog}. Pošalji ponovo kratak tekst i ispravljen <a2ui> blok. ` +
+        "Stringove piši u dvostrukim navodnicima, koristi samo komponente iz kataloga i samo navedene putanje, bez upisivanja podataka.",
+    },
+  ];
+  try {
+    const r = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${kljuc}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ ...zahtev, messages: poruke }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!r.ok) {
+      console.error(`[chat] ispravka A2UI: Groq HTTP ${r.status}`);
+      return null;
+    }
+    return OdgovorGroqSema.parse(await r.json()).choices[0].message.content ?? null;
+  } catch {
+    return null;
+  }
+}
 
 app.use(express.static(path.join(DIST, "chat")));
 
