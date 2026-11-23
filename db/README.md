@@ -5,6 +5,28 @@
 | `01-sema.sql` | Pravi tabele `uredjaj` i `merenje_vode` i indeks. |
 | `02-istorija.sql` | Upisuje uređaj `fishnet-1` i 136 merenja iz `podaci/historydata.json`. |
 | `podaci/historydata.json` | Originalni odgovor `historydata` iz API-ja (bez ključa). |
+| `03-vazduh-vreme.sql` | Dodaje `izvor`, `lat`, `lon` u `uredjaj` i tabele `merenje_vazduha` i `merenje_vremena`. Podatke upisuje `npm run baza:uvoz`. |
+
+## Vazduh i vreme iz javnih izvora
+
+Posle `01` i `02` pokreni `03-vazduh-vreme.sql` u Query Tool-u (F5), pa u terminalu:
+
+```powershell
+npm run baza:uvoz
+```
+
+| Izvor | Uređaj u bazi | Šta upisuje |
+|---|---|---|
+| Open-Meteo (vreme) | `open-meteo-vreme-ns` | satno: temperatura, vlažnost, vetar, padavine, WMO kod; 24 h unazad i 48 h prognoze |
+| Open-Meteo (vazduh, model CAMS) | `open-meteo-vazduh-ns` | satno: PM2.5, PM10, NO₂, O₃ i EAQI koji računa izvor (`eaqi_izvor`) |
+| Sensor.Community | `sc-<id senzora>` | stvarni senzori u krugu od 5 km oko Novog Sada: PM2.5/PM10, a sa BME280 temperatura i vlažnost |
+
+- Ključ nije potreban. Lokacija je `NOVI_SAD` u `src/core/baza/uvoz/izvori.ts`.
+- `prognoza = true` znači vrednost za budući sat. Ponovni uvoz ažurira isti sat, pa prognoza vremenom postaje stvarna vrednost; duplikata nema.
+- Svaki uvoz dodaje nova merenja – pokretanje na sat vremena puni istoriju.
+- Open-Meteo vazduh je **procena modela**, ne merenje; Sensor.Community su jeftini senzori građana. Na ekranu to treba naglasiti.
+- Kategoriju kvaliteta vazduha u aplikaciji i dalje računa `src/core/pravila`, ne `eaqi_izvor`.
+- Alati za vodu (`get_water_*`) vide samo uređaje tipa `kvalitet vode`.
 
 Oba SQL fajla mogu da se pokrenu više puta: ništa se ne briše i ne duplira.
 
