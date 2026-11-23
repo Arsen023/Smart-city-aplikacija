@@ -31,6 +31,7 @@ Poslednje ažuriranje: 2026-11-19 (Luka)
 | — | Chat aplikacija (sopstveni MCP host, prekidač A/B) za demo | Luka | Gotovo | `luka/chat` | #15 | 2026-11-18 |
 | — | Verzija B: AI raspored po želji korisnika (A2UI iz kataloga) | Luka | Gotovo | `luka/a2ui-ai` | #18 | 2026-11-19 |
 | — | Verzija B u chatu kao izvorni A2UI (AI sastavlja ekran, bez iframe-a) | Luka | U pregledu | `luka/a2ui-chat` | — | 2026-11-20 |
+| — | Baza za kvalitet vode (PostgreSQL): šema, istorija FishNET, alati `get_water_*` | Sara | U pregledu | `sara/baza` | #20 | 2026-11-20 |
 | — | Snimci ekrana A za S1–S6 (`docs/snimci/`) | Sara | Nije početo | `sara/ui-a` | — | — |
 
 ## Sledeći koraci
@@ -44,6 +45,12 @@ Poslednje ažuriranje: 2026-11-19 (Luka)
 8. Zajedno: odgovor Maria/Nikole za ekoNET API (T01), pa pravi HTTP klijent u K1.
 
 ## Dnevnik
+### 2026-11-20 – Sara – baza za kvalitet vode
+- Od DunavNET-a stigla FishNET kolekcija (`currentdata`, `historydata`): merenja **vode** (temperatura, pH, ORP, kiseonik, provodljivost, CO2), ne PM2.5/PM10.
+- `db/01-sema.sql` (tabele `uredjaj`, `merenje_vode`, provere, indeks), `db/02-istorija.sql` (136 merenja; 100 praznih zapisa izostavljeno). Vreme upisano kao UTC – potvrditi.
+- `src/core/baza/`: čitanje preko `pg` (pool, parametrizovani upiti, Zod provera reda, vreme u zoni Beograda); `npm run baza:provera`.
+- `src/server/voda-alati.ts`: alati `get_water_devices`, `get_water_latest`, `get_water_history`. Bez `DATABASE_URL` vraćaju poruku, ostatak servera radi. 270 testova.
+
 ### 2026-11-19 – Luka – verzija B: AI raspored po želji korisnika
 - U chatu (verzija B) korisnik može da kaže kako želi da vidi podatke („samo kategorija i grafikon“, „krupno PM2.5 i PM10, pa savet“); chat model prosleđuje želju u parametru `prikaz`.
 - `src/server/a2ui-raspored.ts`: LLM piše pojednostavljen opis rasporeda (Kolona, Red, Kartica, Tekst, Kategorija, Grafikon, Razdelnik); server ga proverava (samo poznate putanje podataka, bez cifara u tekstu, stablo bez ciklusa, najviše 40 komponenti) i deterministički prevodi u A2UI.

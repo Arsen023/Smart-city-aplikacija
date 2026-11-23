@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registrujA2ui } from "./a2ui-alati.js";
 import { registrujAlate, type DobijZavisnosti } from "./alati.js";
+import { poveziBazu, type BazaVode } from "../core/baza/index.js";
+import { registrujAlateVode, type DobijBazu } from "./voda-alati.js";
 import { zavisnostiIzOkruzenja, type ZavisnostiProcene } from "./procena.js";
 
 /**
@@ -10,6 +12,14 @@ import { zavisnostiIzOkruzenja, type ZavisnostiProcene } from "./procena.js";
  */
 let zavisnosti: Promise<ZavisnostiProcene> | undefined;
 const dobijZavisnosti: DobijZavisnosti = () => (zavisnosti ??= zavisnostiIzOkruzenja());
+
+/** Veza sa bazom (pool) – jedna po procesu, pri prvom pozivu alata za vodu. Neuspeh se ne pamti. */
+let baza: Promise<BazaVode> | undefined;
+const dobijBazu: DobijBazu = () =>
+  (baza ??= poveziBazu().catch((e: unknown) => {
+    baza = undefined;
+    throw e;
+  }));
 
 /**
  * Pravi novu instancu MCP servera sa svim alatima i ui:// resursima.
@@ -25,6 +35,9 @@ export function createServer(): McpServer {
 
   // Verzija B (A2UI) – isti tok i zavisnosti kao verzija A; registracija je u a2ui-alati.ts (Luka)
   registrujA2ui(server, dobijZavisnosti);
+
+  // Kvalitet vode iz PostgreSQL baze (FishNET, db/): get_water_devices, get_water_latest, get_water_history (Sara)
+  registrujAlateVode(server, dobijBazu);
 
   return server;
 }
