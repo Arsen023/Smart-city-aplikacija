@@ -3,101 +3,496 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kvalitet vazduha · chat</title>
+    <title>Smart City Novi Sad</title>
     <style>
       :root {
-        --pozadina: #f6f8fa;
+        --pozadina: #f1f5fb;
         --kartica: #ffffff;
         --tekst: #0f172a;
-        --sporedno: #475569;
-        --ivica: #e2e8f0;
-        --plava: #0369a1;
+        --sporedno: #64748b;
+        --ivica: #e5eaf2;
+        --plava: #2563eb;
+        --plava-svetla: #eff4ff;
         --tamna: #0f172a;
         --b: #7c3aed;
+        --senka: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.05);
+        --r: 18px;
       }
       * {
         box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
       }
       body {
         margin: 0;
         background: var(--pozadina);
         color: var(--tekst);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       }
-      .okvir {
-        max-width: 760px;
-        margin: 0 auto;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        padding: 0 16px;
-      }
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background: var(--pozadina);
-        padding: 16px 0 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid var(--ivica);
-      }
-      h1 {
-        font-size: 1.15rem;
+      h1,
+      h2,
+      h3 {
         margin: 0;
       }
-      .podnaslov {
-        margin: 2px 0 0;
-        font-size: 0.85rem;
+      .sitno {
+        font-size: 0.78rem;
         color: var(--sporedno);
       }
-      .prekidac {
-        display: inline-flex;
+
+      /* ─── Raspored: meni | tabla | chat ─── */
+      .aplikacija {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        height: 100vh;
+      }
+      .meni {
         background: var(--kartica);
-        border: 1px solid var(--ivica);
+        border-right: 1px solid var(--ivica);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        gap: 28px;
+      }
+      .logo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+      }
+      .logo .znak {
+        font-size: 2.4rem;
+      }
+      .logo strong {
+        font-size: 1.2rem;
+      }
+      .meni nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .meni nav a {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 14px;
         border-radius: 12px;
-        padding: 3px;
+        color: var(--tekst);
+        text-decoration: none;
+        font-weight: 500;
       }
-      .prekidac input {
-        position: absolute;
-        opacity: 0;
+      .meni nav a:hover {
+        background: var(--plava-svetla);
       }
-      .prekidac label {
-        padding: 6px 12px;
-        border-radius: 9px;
-        cursor: pointer;
+      .meni nav a.aktivno {
+        background: var(--plava);
+        color: #fff;
+      }
+      .meni .dno {
+        margin-top: auto;
+        background: linear-gradient(160deg, #ecfdf5, #eff6ff);
+        border-radius: 16px;
+        padding: 16px;
         font-size: 0.85rem;
+        line-height: 1.4;
+      }
+
+      /* ─── Tabla ─── */
+      .tabla {
+        overflow-y: auto;
+        padding: 24px 28px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .tabla.ucitava {
+        opacity: 0.75;
+      }
+      .tabla-zaglavlje {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .tabla-zaglavlje h1 {
+        font-size: 1.7rem;
+      }
+      .tabla-zaglavlje p {
+        margin: 4px 0 0;
+        color: var(--sporedno);
+      }
+      .azurirano {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      button.krug {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid var(--ivica);
+        background: var(--kartica);
+        color: var(--plava);
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: var(--senka);
+      }
+      button.krug:disabled {
+        opacity: 0.5;
+        cursor: progress;
+      }
+      .upozorenje {
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 0.88rem;
+      }
+      .kartice {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .stat {
+        background: var(--kartica);
+        border-radius: var(--r);
+        box-shadow: var(--senka);
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        min-height: 128px;
+      }
+      .stat-ikona {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 1.4rem;
+      }
+      .stat h3 {
+        font-size: 0.88rem;
         font-weight: 600;
         color: var(--sporedno);
       }
-      .prekidac input:checked + label {
-        background: var(--tamna);
+      .stat-vrednost {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 4px 0 2px;
+      }
+      .stat-vrednost small {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--sporedno);
+      }
+      .stat-ispod {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--sporedno);
+      }
+      .stat-mini {
+        grid-column: 1 / -1;
+        margin-top: 8px;
+      }
+      svg.mini {
+        width: 100%;
+        height: 34px;
+        display: block;
+      }
+      .bedz {
+        display: inline-block;
+        font-size: 1rem;
+        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 999px;
+      }
+      .bedz.bez {
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 0.9rem;
+      }
+      .nedostupno {
+        font-size: 1rem;
+        color: var(--sporedno);
+        font-weight: 500;
+      }
+
+      .panel {
+        background: var(--kartica);
+        border-radius: var(--r);
+        box-shadow: var(--senka);
+        padding: 18px;
+        min-width: 0;
+      }
+      .panel h2 {
+        font-size: 1.02rem;
+      }
+      .panel-zaglavlje {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .izvor {
+        margin: 8px 0 0;
+        font-size: 0.75rem;
+        color: var(--sporedno);
+      }
+      .prazno {
+        color: var(--sporedno);
+        padding: 24px 0;
+        text-align: center;
+      }
+      .red-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+        gap: 16px;
+      }
+      .red-3 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      #mapa {
+        height: 320px;
+        border-radius: 14px;
+        z-index: 0;
+      }
+      .legenda {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-size: 0.78rem;
+        color: var(--sporedno);
+      }
+      .legenda li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legenda i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .legenda i.model {
+        border: 2px dashed #1e293b;
+        width: 13px;
+        height: 13px;
+      }
+      .leaflet-popup-content {
+        line-height: 1.6;
+      }
+      .leaflet-popup-content .bedz {
+        font-size: 0.8rem;
+      }
+
+      .prognoza {
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(170deg, #f8fbff, #ffffff 55%);
+      }
+      .sada-vreme {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin: 16px 0;
+      }
+      .ik-velika {
+        font-size: 3.2rem;
+      }
+      .temp-velika {
+        font-size: 2.6rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .temp-velika small {
+        font-size: 1.2rem;
+        color: var(--sporedno);
+      }
+      .opis {
+        font-weight: 600;
+        margin: 4px 0;
+      }
+      .sati {
+        list-style: none;
+        margin: auto 0 0;
+        padding: 12px 0 0;
+        border-top: 1px solid var(--ivica);
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        text-align: center;
+        gap: 4px;
+      }
+      .sati li {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.82rem;
+      }
+      .sati .sat {
+        color: var(--sporedno);
+      }
+      .sati .ik {
+        font-size: 1.3rem;
+      }
+
+      .cipovi {
+        display: inline-flex;
+        gap: 4px;
+        background: var(--pozadina);
+        padding: 3px;
+        border-radius: 999px;
+      }
+      .cipovi button {
+        border: 0;
+        background: transparent;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        color: var(--sporedno);
+      }
+      .cipovi button.aktivno {
+        background: var(--plava);
         color: #fff;
       }
-      .prekidac input:focus-visible + label {
-        outline: 2px solid var(--plava);
+      svg.grafikon {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      svg .mreza {
+        stroke: var(--ivica);
+        stroke-width: 1;
+      }
+      svg .osa {
+        fill: var(--sporedno);
+        font-size: 11px;
+      }
+
+      /* ─── Chat panel ─── */
+      .chat {
+        position: fixed;
+        right: 24px;
+        bottom: 96px;
+        z-index: 1000;
+        width: 400px;
+        height: min(680px, calc(100vh - 120px));
+        background: var(--kartica);
+        border: 1px solid var(--ivica);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transform-origin: bottom right;
+        transition:
+          opacity 0.18s ease,
+          transform 0.18s ease;
+      }
+      .chat[hidden] {
+        display: flex;
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+        pointer-events: none;
+        visibility: hidden;
+      }
+      button.zatvori-chat {
+        border: 0;
+        background: transparent;
+        font-size: 1.3rem;
+        color: var(--sporedno);
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+      }
+      button.zatvori-chat:hover {
+        background: var(--pozadina);
+      }
+      .chat-dugme {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1001;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--plava);
+        color: #fff;
+        font-size: 1.6rem;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+        display: grid;
+        place-items: center;
+        transition: transform 0.15s ease;
+      }
+      .chat-dugme:hover {
+        transform: scale(1.06);
+      }
+      .chat-dugme:focus-visible {
+        outline: 3px solid #93c5fd;
+        outline-offset: 3px;
+      }
+      .chat > header {
+        padding: 14px 12px 12px 18px;
+        border-bottom: 1px solid var(--ivica);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .chat-naslov {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .chat-naslov h2 {
+        font-size: 1.05rem;
+      }
+      .tacka-online {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #22c55e;
+        margin-right: 4px;
       }
       #razgovor {
         flex: 1;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        padding: 16px 0;
+        padding: 16px;
+        background: #fbfcfe;
       }
       .poruka {
-        max-width: 85%;
+        max-width: 88%;
         padding: 10px 14px;
         border-radius: 16px;
         line-height: 1.45;
         white-space: pre-wrap;
+        font-size: 0.92rem;
       }
       .korisnik {
         align-self: flex-end;
-        background: var(--tamna);
-        color: #fff;
+        background: #dbeafe;
+        color: var(--tekst);
         border-bottom-right-radius: 4px;
       }
       .asistent {
@@ -105,6 +500,7 @@
         background: var(--kartica);
         border: 1px solid var(--ivica);
         border-bottom-left-radius: 4px;
+        box-shadow: var(--senka);
       }
       .asistent.greska,
       .greska {
@@ -116,23 +512,27 @@
       .razdelnik {
         align-self: center;
         max-width: 100%;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--sporedno);
         border-top: 1px solid var(--ivica);
         padding: 8px 0 0;
         width: 100%;
         text-align: center;
         border-radius: 0;
+        box-shadow: none;
       }
       .ekran-blok {
         max-width: 100%;
         width: 100%;
         padding: 0;
         white-space: normal;
+        box-shadow: none;
+        border: 0;
+        background: transparent;
       }
       .oznaka {
         display: inline-block;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
         letter-spacing: 0.02em;
         padding: 3px 10px;
@@ -141,7 +541,7 @@
         color: #fff;
       }
       .oznaka-a {
-        background: var(--plava);
+        display: none; /* chat ima samo verziju A, oznaka nije potrebna */
       }
       .oznaka-b {
         background: var(--b);
@@ -174,10 +574,14 @@
         background: var(--kartica);
         display: block;
       }
+      .chat > footer {
+        padding: 10px 16px 14px;
+        border-top: 1px solid var(--ivica);
+      }
       #predlozi {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         margin-bottom: 8px;
       }
       #predlozi button {
@@ -185,84 +589,139 @@
         background: var(--kartica);
         color: var(--tekst);
         border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 0.85rem;
+        padding: 5px 10px;
+        font-size: 0.78rem;
         cursor: pointer;
-      }
-      footer {
-        position: sticky;
-        bottom: 0;
-        background: var(--pozadina);
-        padding: 8px 0 16px;
       }
       form {
         display: flex;
         gap: 8px;
+        background: var(--pozadina);
+        border-radius: 999px;
+        padding: 4px 4px 4px 14px;
       }
       #unos {
         flex: 1;
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 1px solid var(--ivica);
-        font-size: 1rem;
-        background: var(--kartica);
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        font-size: 0.95rem;
         color: var(--tekst);
+        outline: none;
       }
       #posalji {
-        padding: 0 18px;
+        width: 40px;
+        height: 40px;
         border: 0;
-        border-radius: 14px;
-        background: var(--tamna);
+        border-radius: 50%;
+        background: var(--plava);
         color: #fff;
-        font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 1.05rem;
         cursor: pointer;
       }
       #posalji:disabled {
         opacity: 0.5;
         cursor: default;
       }
+      form:focus-within {
+        outline: 2px solid var(--plava);
+      }
       #status {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         color: var(--sporedno);
         margin-top: 6px;
       }
       #status.greska {
         color: #9f1239;
       }
+
+      /* ─── Uži ekrani ─── */
+      @media (max-width: 1400px) {
+        .kartice {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 1200px) {
+        .aplikacija {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .meni {
+          display: none;
+        }
+        .red-2,
+        .red-3 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 860px) {
+        .aplikacija {
+          display: block;
+          height: auto;
+        }
+        .tabla {
+          overflow: visible;
+          padding: 16px;
+        }
+        .kartice {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .chat {
+          inset: 0;
+          width: auto;
+          height: auto;
+          border-radius: 0;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="okvir">
-      <header>
-        <div>
-          <h1>Kvalitet vazduha</h1>
-          <p class="podnaslov">Pitajte da li je sada dobro vreme za šetnju ili trening napolju.</p>
+    <div class="aplikacija">
+      <aside class="meni">
+        <div class="logo">
+          <span class="znak" aria-hidden="true">🌿</span>
+          <strong>Smart City</strong>
+          <span class="sitno">Novi Sad · životna sredina</span>
         </div>
-        <div class="prekidac" role="radiogroup" aria-label="Verzija ekrana">
-          <input type="radio" name="verzija" id="verzija-a" value="A" checked />
-          <label for="verzija-a">Verzija A · MCP App</label>
-          <input type="radio" name="verzija" id="verzija-b" value="B" />
-          <label for="verzija-b">Verzija B · A2UI</label>
+        <nav aria-label="Glavni meni">
+          <a href="#" class="aktivno" aria-current="page">🏠 Kontrolna tabla</a>
+        </nav>
+        <div class="dno">
+          🌱 Izvori: Open-Meteo, Sensor.Community, FishNET (DunavNET). Kategoriju vazduha računa EAQI modul pravila.
         </div>
-      </header>
+      </aside>
 
-      <main id="razgovor" aria-live="polite"></main>
+      <main class="tabla" id="tabla" aria-live="polite"></main>
 
-      <footer>
-        <div id="predlozi" aria-label="Predlozi pitanja">
-          <button type="button">Da li je sad dobro vreme za trčanje na Limanu?</button>
-          <button type="button">Mogu li da izađem u šetnju?</button>
-          <button type="button">Kakav je vazduh u Novom Sadu?</button>
-        </div>
-        <form id="forma">
-          <label for="unos" class="sr-only" hidden>Pitanje</label>
-          <input id="unos" autocomplete="off" placeholder="Napišite pitanje…" />
-          <button id="posalji" type="submit">Pošalji</button>
-        </form>
-        <div id="status" role="status">Povezivanje…</div>
-      </footer>
+      <section class="chat" id="chat" role="dialog" aria-label="Eko asistent" hidden>
+        <header>
+          <div class="chat-naslov">
+            <span aria-hidden="true" style="font-size: 1.4rem">✨</span>
+            <div>
+              <h2>Eko asistent</h2>
+              <span class="sitno"><span class="tacka-online"></span>Pitajte za šetnju, trening ili vreme</span>
+            </div>
+          </div>
+          <button type="button" class="zatvori-chat" id="zatvori-chat" aria-label="Zatvori chat">✕</button>
+        </header>
+
+        <div id="razgovor" aria-live="polite"></div>
+
+        <footer>
+          <div id="predlozi" aria-label="Predlozi pitanja">
+            <button type="button">Da li je sad dobro vreme za trčanje?</button>
+            <button type="button">Kakvo je vreme danas?</button>
+            <button type="button">Kakav je vazduh u Novom Sadu?</button>
+          </div>
+          <form id="forma">
+            <label for="unos" class="sr-only" hidden>Pitanje</label>
+            <input id="unos" autocomplete="off" placeholder="Postavite pitanje…" />
+            <button id="posalji" type="submit" aria-label="Pošalji">➤</button>
+          </form>
+          <div id="status" role="status">Povezivanje…</div>
+        </footer>
+      </section>
     </div>
+    <button type="button" class="chat-dugme" id="chat-dugme" aria-label="Otvori chat" aria-controls="chat" aria-expanded="false">💬</button>
     <script type="module" src="./app.ts"></script>
   </body>
 </html>

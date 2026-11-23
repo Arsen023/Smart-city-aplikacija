@@ -2,18 +2,20 @@
  * Javni API K1 ekoNET klijenta. Server uvozi samo odavde.
  *
  * Izvor podataka se bira promenljivama okruženja (vidi .env.example):
- * - EKONET_IZVOR    – "demo" (podrazumevano) ili "api"
+ * - EKONET_IZVOR    – "demo" (podrazumevano), "baza" (naša PostgreSQL baza, DATABASE_URL) ili "api"
  * - EKONET_SCENARIO – demo scenario iz fixtures/, podrazumevano "s1-dobar"
  */
 import type { EkonetKlijent } from "../tipovi.js";
+import { napraviBazuVazduhaIVremena, poveziVezu } from "../baza/index.js";
+import { napraviKlijentIzBaze } from "./baza.js";
 import { napraviDemoKlijent } from "./demo.js";
 import { GreskaEkonet } from "./greske.js";
 import { DEMO_SCENARIJI, jeDemoScenarioId, ucitajScenario, type DemoScenarioId } from "./ucitaj.js";
 
 export const PODRAZUMEVANI_SCENARIO: DemoScenarioId = "s1-dobar";
-const IZVORI = ["demo", "api"] as const;
+const IZVORI = ["demo", "baza", "api"] as const;
 
-export type PodesavanjaEkonet = { izvor: "demo"; scenario: DemoScenarioId } | { izvor: "api" };
+export type PodesavanjaEkonet = { izvor: "demo"; scenario: DemoScenarioId } | { izvor: "baza" } | { izvor: "api" };
 
 type Okruzenje = Readonly<Record<string, string | undefined>>;
 
@@ -26,6 +28,7 @@ function procitaj(env: Okruzenje, ime: string): string | undefined {
 export function procitajPodesavanja(env: Okruzenje): PodesavanjaEkonet {
   const izvor = procitaj(env, "EKONET_IZVOR") ?? "demo";
   if (izvor === "api") return { izvor: "api" };
+  if (izvor === "baza") return { izvor: "baza" };
   if (izvor !== "demo") {
     throw new GreskaEkonet(
       "konfiguracija",
@@ -54,6 +57,12 @@ export interface IzvorPodataka {
 /** Pravi izvor podataka (klijent + sat) prema podešavanjima iz okruženja. */
 export async function napraviIzvor(env: Okruzenje = process.env): Promise<IzvorPodataka> {
   const p = procitajPodesavanja(env);
+  if (p.izvor === "baza") {
+    // Pravi podaci iz baze (puni ih uvoz iz javnih izvora); svežina po pravom satu.
+    const veza = await poveziVezu(env);
+    const sada = () => new Date();
+    return { klijent: napraviKlijentIzBaze(napraviBazuVazduhaIVremena(veza.izvrsi), sada), sada, llmGreska: false };
+  }
   if (p.izvor === "api") {
     // TODO T01: pravi HTTP klijent (URL, autentifikacija, Zod šema odgovora, normalizacija).
     // Tada: sada = () => new Date(), llmGreska = false.

@@ -12,6 +12,7 @@ import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors";
 import type { Request, Response } from "express";
+import { pokreniPeriodicniUvoz } from "./src/server/periodicni-uvoz.js";
 import { createServer } from "./src/server/server.js";
 
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
@@ -51,4 +52,6 @@ app.listen(PORT, (err?: Error) => {
     process.exit(1);
   }
   console.log(`MCP server listening on http://localhost:${PORT}/mcp`);
+  // EKONET_IZVOR=baza: vreme i vazduh se periodično uvoze u bazu (src/server/periodicni-uvoz.ts)
+  pokreniPeriodicniUvoz();
 });

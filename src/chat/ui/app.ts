@@ -21,6 +21,7 @@ import {
   type Verzija,
 } from "../alati.js";
 import { a2uiIzRezultata, prikaziA2ui, type A2uiIzAlata } from "./a2ui-prikaz.js";
+import { pokreniTablu } from "./dashboard.js";
 import { imaEkran, prikaziEkran } from "./ekran.js";
 
 type Komponenta = { id: string; component: string } & Record<string, unknown>;
@@ -45,26 +46,43 @@ let sandboxUrl = "";
 let kontekstEkrana: string | null = null;
 const poruke: ChatPoruka[] = [];
 
-// ─── Verzija A/B ────────────────────────────────────────────────────────────
+// ─── Verzija ────────────────────────────────────────────────────────────────
+
+/**
+ * Chat koristi verziju A (MCP App). Verzija B (izvorni A2UI) ostaje u kodu i otvara se samo
+ * preko adrese `?verzija=B` (npr. za poređenje na prezentaciji) – na stranici nema prekidača.
+ */
+const IZABRANA_VERZIJA: Verzija = parametri.get("verzija") === "B" ? "B" : "A";
 
 function verzija(): Verzija {
-  const izabrana = document.querySelector<HTMLInputElement>('input[name="verzija"]:checked');
-  return izabrana?.value === "B" ? "B" : "A";
+  return IZABRANA_VERZIJA;
 }
 
-if (parametri.get("verzija") === "B") {
-  (document.getElementById("verzija-b") as HTMLInputElement).checked = true;
+// ─── Otvaranje i zatvaranje chata (okrugla ikonica dole desno) ──────────────
+
+const panelChata = document.getElementById("chat") as HTMLElement;
+const dugmeChata = document.getElementById("chat-dugme") as HTMLButtonElement;
+
+function otvoriChat(otvoren: boolean) {
+  panelChata.hidden = !otvoren;
+  dugmeChata.setAttribute("aria-expanded", String(otvoren));
+  dugmeChata.setAttribute("aria-label", otvoren ? "Zatvori chat" : "Otvori chat");
+  dugmeChata.textContent = otvoren ? "✕" : "💬";
+  if (otvoren) {
+    razgovor.scrollTop = razgovor.scrollHeight;
+    if (!dugme.disabled) unos.focus();
+  } else {
+    dugmeChata.focus();
+  }
 }
 
-// Promena verzije počinje novi razgovor, da bi se na prezentaciji za svaku verziju videlo
-// pitanje → poziv alata → ekran → odgovor.
-document.querySelectorAll<HTMLInputElement>('input[name="verzija"]').forEach((r) =>
-  r.addEventListener("change", () => {
-    poruke.length = 0;
-    kontekstEkrana = null;
-    if (razgovor.childElementCount > 0) dodaj("razdelnik", `Prebačeno na ${OPIS_VERZIJE[verzija()]} – novi razgovor`);
-  }),
-);
+dugmeChata.addEventListener("click", () => otvoriChat(Boolean(panelChata.hidden)));
+document.getElementById("zatvori-chat")?.addEventListener("click", () => otvoriChat(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !panelChata.hidden) otvoriChat(false);
+});
+// ?chat=1 otvara chat odmah (npr. za demo)
+if (parametri.get("chat") === "1" || parametri.has("verzija")) otvoriChat(true);
 
 // ─── Prikaz poruka ──────────────────────────────────────────────────────────
 
@@ -249,7 +267,7 @@ async function posalji(tekst: string) {
   } finally {
     postaviStatus(klijent ? "Povezano" : "");
     zauzeto(false);
-    unos.focus();
+    if (!panelChata.hidden) unos.focus();
   }
 }
 
@@ -277,12 +295,22 @@ async function povezi() {
     klijent = new Client({ name: "Smart City chat", version: "1.0.0" });
     await klijent.connect(new StreamableHTTPClientTransport(new URL(mcpUrl)));
     alati = (await klijent.listTools()).tools;
+    pokreniKontrolnuTablu(klijent);
     postaviStatus(`Povezano · ${new URL(mcpUrl).host} · ${konf.model}`);
     zauzeto(false);
-    unos.focus();
+    if (!panelChata.hidden) unos.focus();
   } catch {
     postaviStatus("Nema veze sa MCP serverom. Pokrenite „npm start“ i osvežite stranicu.", true);
   }
+}
+
+/** Kontrolna tabla levo od chata: isti MCP klijent, alat get_dashboard; osvežava se na 5 min. */
+function pokreniKontrolnuTablu(k: Client) {
+  const koren = document.getElementById("tabla");
+  if (!koren) return;
+  const tabla = pokreniTablu(koren, async (ime, argumenti) => (await k.callTool({ name: ime, arguments: argumenti })) as CallToolResult);
+  void tabla.osvezi();
+  setInterval(() => void tabla.osvezi(), 5 * 60_000);
 }
 
 void povezi();

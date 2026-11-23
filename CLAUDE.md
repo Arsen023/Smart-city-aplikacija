@@ -29,8 +29,9 @@ npm run typecheck    # tsc bez emitovanja
 Ako neka od ovih skripti još ne postoji u `package.json`, reci to i predloži da se doda; ne preskači proveru ćutke.
 
 Chat aplikacija (demo): `npm run demo` → http://localhost:3010 (ili `npm start` i `npm run chat` u dva terminala).
-Prekidač „Verzija A / B“ bira ekran; `?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario),
-`?verzija=B` otvara odmah verziju B.
+Stranica je kontrolna tabla; chat se otvara okruglom ikonicom dole desno i koristi verziju A (MCP App).
+Verzija B (izvorni A2UI) nema prekidač na stranici: otvara se sa `?verzija=B` (za poređenje). `?chat=1` odmah otvara chat,
+`?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario).
 
 Test host za razvoj (u drugom terminalu, iz kloniranog ext-apps repoa, van ovog projekta):
 `cd ext-apps/examples/basic-host && npm start` → http://localhost:8080
@@ -54,7 +55,9 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
 | Chat aplikacija (naš MCP host) | `src/chat/` | Luka | Chat sa Groq-om (`server.ts`, port 3010), stranica sa prekidačem A/B (`ui/`), sandbox za ekrane verzije A (`sandbox/`, port 3011). Verzija B: AI sastavlja A2UI ekran (`a2ui-agent.ts`, zvanični SDK `@a2ui/agent` + naše provere), chat ga crta izvorno (`ui/a2ui-prikaz.ts`). Ne računa ništa: podatke uzima iz MCP alata |
 | Baza (voda) | `src/core/baza/`, `db/` | Sara | PostgreSQL: šema i istorija FishNET merenja (`db/`), čitanje preko `pg` (`src/core/baza/`), alati `get_water_*` (`src/server/voda-alati.ts`) |
-| Uvoz vazduha i vremena | `src/core/baza/uvoz/`, `db/03-vazduh-vreme.sql` | Luka | Open-Meteo (vreme, vazduh – model) i Sensor.Community (senzori) → tabele `merenje_vazduha`, `merenje_vremena` |
+| Uvoz vazduha i vremena | `src/core/baza/uvoz/`, `db/03-vazduh-vreme.sql` | Luka | Open-Meteo (vreme, vazduh – model) i Sensor.Community (senzori) → tabele `merenje_vazduha`, `merenje_vremena`; sa `EKONET_IZVOR=baza` server uvozi sam (`src/server/periodicni-uvoz.ts`, `BAZA_UVOZ_MIN`) |
+| K1 nad bazom | `src/core/ekonet/baza.ts`, `src/core/baza/vazduh-vreme.ts` | Luka | `EKONET_IZVOR=baza`: stanice i merenja vazduha iz baze (prognoze se ne vraćaju kao merenja) |
+| Dashboard | `src/server/dashboard-alati.ts`, `src/chat/ui/dashboard.ts`, `grafikoni.ts` | Luka | Alat `get_dashboard` (samo za ekran: vazduh bez LLM saveta, senzori za mapu, vreme, voda) i `get_weather` (i za chat model); stranica: kartice, Leaflet mapa (OSM podloga), prognoza, SVG grafikoni |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |
@@ -93,7 +96,8 @@ Tok: alat `assess_air_quality` → K1 preuzme merenja → K2 proveri svežinu i 
 K3 (samo ako je status `ok`) napiše savet → server vraća kratak tekst u `content` i ceo rezultat
 u `structuredContent` → prikaz A ili B ga iscrtava.
 
-MCP alati: `get_stations`, `get_latest`, `get_history`, `assess_air_quality`.
+MCP alati: `get_stations`, `get_latest`, `get_history`, `assess_air_quality` (+ `assess_air_quality_a2ui`),
+`get_water_*`, `get_weather`, `get_dashboard`.
 `status` je uvek jedno od: `ok`, `stale`, `no_data`, `error`.
 
 ## Pravila koja se ne krše

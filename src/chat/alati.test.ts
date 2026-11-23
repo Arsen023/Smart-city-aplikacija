@@ -26,20 +26,22 @@ const SVI = [
   alat("assess_air_quality"),
   alat("assess_air_quality_a2ui", ["model", "app"]),
   alat("osvezi_a2ui", ["app"]),
+  alat("get_weather"),
+  alat("get_dashboard", ["app"]),
 ];
 
 describe("alati za verziju", () => {
-  test("A: spisak stanica + assess_air_quality", () => {
+  test("A: spisak stanica + assess_air_quality + vreme, bez dashboard-a", () => {
     assert.deepEqual(
       alatiZaVerziju(SVI, "A").map((a) => a.name),
-      ["get_stations", "assess_air_quality"],
+      ["get_stations", "assess_air_quality", "get_weather"],
     );
   });
 
   test("B: spisak stanica + assess_air_quality_a2ui, bez alata samo za ekran", () => {
     assert.deepEqual(
       alatiZaVerziju(SVI, "B").map((a) => a.name),
-      ["get_stations", "assess_air_quality_a2ui"],
+      ["get_stations", "assess_air_quality_a2ui", "get_weather"],
     );
   });
 

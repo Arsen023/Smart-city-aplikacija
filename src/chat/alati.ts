@@ -34,9 +34,12 @@ export interface ChatAlat {
   function: { name: string; description: string; parameters: Record<string, unknown> };
 }
 
-/** Alati koje model vidi: spisak stanica + procena za izabranu verziju. Alati samo za ekran se ne nude. */
+/** Alat za vreme i prognozu (isti u obe verzije; odgovor je tekst, bez ekrana). */
+export const ALAT_VREMENA = "get_weather";
+
+/** Alati koje model vidi: spisak stanica, procena za izabranu verziju i vreme. Alati samo za ekran se ne nude. */
 export function alatiZaVerziju(alati: McpAlat[], verzija: Verzija): McpAlat[] {
-  const dozvoljeni = new Set(["get_stations", ALAT_PROCENE[verzija]]);
+  const dozvoljeni = new Set(["get_stations", ALAT_PROCENE[verzija], ALAT_VREMENA]);
   return alati
     .filter((a) => dozvoljeni.has(a.name) && !samoZaEkran(a))
     .map((a) => (verzija === "B" ? bezParametraPrikaz(a) : a));
@@ -152,6 +155,8 @@ export function sistemskaPoruka(verzija: Verzija): string {
     "stationId mora biti tačan id iz get_stations (npr. „demo-liman“), nikad naziv stanice.",
     "Ako ne znaš id, prvo pozovi get_stations, ili pozovi procenu bez stationId (tada se koristi prva stanica).",
     "Rezultat alata se korisniku prikazuje kao ekran sa vrednostima, kategorijom, grafikonom i savetom.",
+    `Za pitanja o vremenu (temperatura, kiša, vetar, prognoza) pozovi ${ALAT_VREMENA} i prepričaj samo brojeve iz rezultata. ` +
+      "Kad korisnik pita da li je dobro za šetnju ili trening, možeš uz procenu vazduha pozvati i taj alat.",
     ...(verzija === "B"
       ? [
           "U ovoj verziji ekran sastavljaš TI, u A2UI bloku (pravila dobijaš posle rezultata alata).",
@@ -163,7 +168,7 @@ export function sistemskaPoruka(verzija: Verzija): string {
     "Koristi samo kategoriju, brojeve i savet iz rezultata alata. Kategoriju nikad ne računaš sam i ne izmišljaš brojeve.",
     "Ako rezultat kaže da nema preporuke (zastareli podaci, nema podataka ili greška), prenesi tu poruku i ne daj savet.",
     "Ne daješ medicinske savete ni dijagnoze.",
-    "Za pitanja van ove teme ljubazno reci da pomažeš samo oko kvaliteta vazduha za šetnju i trening.",
+    "Za pitanja van ove teme ljubazno reci da pomažeš samo oko kvaliteta vazduha, vremena i šetnje ili treninga napolju.",
   ].join("\n");
 }
 
