@@ -18,6 +18,7 @@ npm install          # zavisnosti
 npm start            # samo MCP server na http://localhost:3001/mcp (ekrani iz dist/, prvo npm run build)
 npm run build        # typecheck + build ekrana A i B (dist/ui-a, dist/ui-b) i chat aplikacije (dist/chat, dist/chat-sandbox)
 npm run chat         # chat aplikacija na http://localhost:3010 (treba i npm start; Groq ključ iz .env)
+npm run baza:provera # provera veze sa PostgreSQL bazom (DATABASE_URL iz .env)
 npm test             # testovi (node --test + tsx), fajlovi *.test.ts
 npm run dev          # watch build ekrana + server (razvoj)
 npm run typecheck    # tsc bez emitovanja
@@ -49,6 +50,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | Prikaz B | `src/ui-b/` | Luka | A2UI renderer unutar MCP App-a |
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
 | Chat aplikacija (naš MCP host) | `src/chat/` | Luka | Chat sa Groq-om (`server.ts`, port 3010), stranica sa prekidačem A/B (`ui/`), sandbox za ekrane (`sandbox/`, port 3011). Ne računa ništa: alate poziva na MCP serveru |
+| Baza (voda) | `src/core/baza/`, `db/` | Sara | PostgreSQL: šema i istorija FishNET merenja (`db/`), čitanje preko `pg` (`src/core/baza/`), alati `get_water_*` (`src/server/voda-alati.ts`) |
 | Pokretanje | `main.ts` | Sara | HTTP MCP server na portu 3001 |
 | Test podaci | `fixtures/` | zajedno | Snimljeni ili izmišljeni odgovori API-ja za testove i demo režim |
 | Dokumentacija | `docs/` | zajedno | `PODELA-RADA.md`, Stitch procena, beleške |
@@ -59,6 +61,7 @@ Pravila zavisnosti:
 - `src/server/` ne uvozi ništa iz `src/ui-*` (zajedničke konstante idu u `src/zajednicko/`).
 - `src/zajednicko/` sadrži samo konstante i čiste funkcije bez DOM-a i I/O-a; ne uvozi iz `src/server/` ni `src/ui-*`.
 - `src/core/` ne uvozi ništa iz `src/server/` ni iz `src/ui-*`.
+- Bazi pristupa samo server preko `src/core/baza/`; prikazi i chat je ne vide. Upiti su uvek parametrizovani (`$1`), lozinka samo u `.env` (`DATABASE_URL`).
 - `src/core/pravila/` nema I/O (bez mreže, fajlova i `Date.now()`; vreme dobija kao parametar).
 - `src/chat/` ne uvozi iz `src/core/`, `src/server/` ni `src/ui-*`: sa serverom razgovara samo preko MCP-a,
   kao bilo koji host. Chat model ne računa kategoriju – prepričava rezultat alata (pravila 1 i 7).

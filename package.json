@@ -11,6 +11,7 @@
     "build:chat": "cross-env UI=chat vite build && cross-env UI=chat-sandbox vite build",
     "build": "npm run typecheck && npm run build:a && npm run build:b && npm run build:chat",
     "start": "tsx main.ts",
+    "baza:provera": "tsx src/core/baza/provera.ts",
     "chat": "tsx src/chat/server.ts",
     "dev": "concurrently \"cross-env UI=ui-a NODE_ENV=development vite build --watch\" \"cross-env UI=ui-b NODE_ENV=development vite build --watch\" \"tsx watch main.ts\""
   },
@@ -34,12 +35,14 @@
     "cors": "^2.8.6",
     "express": "^5.3.0",
     "lit": "^3.3.3",
+    "pg": "^8.23.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
     "concurrently": "^10.0.7",
     "cross-env": "^10.1.0",
     "tsx": "^4.23.15",
