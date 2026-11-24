@@ -22,6 +22,7 @@ import type { Kategorija, NivoKategorije, SatnaVrednost, Status } from "../core/
 import { isoBeograd, prikazDatumVreme } from "../core/vreme.js";
 import { opisVremena } from "../zajednicko/vreme-kodovi.js";
 import type { DobijZavisnosti } from "./alati.js";
+import { deloviDashboarda, podaciA2uiDashboarda } from "./dashboard-a2ui.js";
 import { porukaGreske, proceniKvalitet } from "./procena.js";
 
 export type DobijBazuVV = () => Promise<BazaVazduhaIVremena>;
@@ -272,8 +273,13 @@ export function registrujAlateDashboarda(
       _meta: { ui: { visibility: ["app"] } },
     },
     async () => {
-      const d = await napraviDashboard(dobijZavisnosti, dobijBazuVV, dobijBazuVode);
-      return { content: tekst(tekstDashboarda(d)), structuredContent: { ...d } };
+      const sada = new Date();
+      const d = await napraviDashboard(dobijZavisnosti, dobijBazuVV, dobijBazuVode, sada);
+      // `a2ui`: isti podaci kao data model za izvorni A2UI u chatu (verzija B) – vidi dashboard-a2ui.ts.
+      return {
+        content: tekst(tekstDashboarda(d)),
+        structuredContent: { ...d, a2ui: { podaci: podaciA2uiDashboarda(d, sada), delovi: deloviDashboarda(d) } },
+      };
     },
   );
 

@@ -9,6 +9,7 @@ import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { ActionPayload } from "@a2ui/web_core/v0_9";
 import {
   ALAT_PROCENE,
+  ALATI_ZA_EKRAN_B,
   alatiZaVerziju,
   argumentiPoziva,
   jeGreskaProcene,
@@ -127,7 +128,8 @@ async function pitajModel(v: Verzija): Promise<OdgovorChata> {
       poruke,
       alati: ponudjeni,
       kontekst: kontekstEkrana ?? undefined,
-      a2uiPodaci: v === "B" && procitajA2ui() !== null,
+      a2uiPodaci: v === "B" && (procitajA2ui() !== null || procitajBazu() !== null),
+      a2uiDelovi: v === "B" ? deloviB() : undefined,
     }),
   });
   const telo = (await odgovor.json()) as Partial<OdgovorChata> & { greska?: string };
@@ -142,6 +144,35 @@ type PodaciB = { izAlata: A2uiIzAlata; argumenti: Record<string, unknown> };
 let poslednjiA2ui: PodaciB | null = null;
 const procitajA2ui = (): PodaciB | null => poslednjiA2ui;
 
+/**
+ * Podaci iz baze za ekran verzije B (vreme, voda, senzori, vazduh bez saveta) – MCP alat get_dashboard
+ * vraća ih kao gotov data model (`a2ui.podaci`). Uzimaju se jednom po pitanju, kad AI pozove alat sa podacima.
+ */
+type PodaciBaze = { podaci: Record<string, unknown>; delovi: string[] };
+let podaciBaze: PodaciBaze | null = null;
+const procitajBazu = (): PodaciBaze | null => podaciBaze;
+
+async function ucitajPodatkeBaze(): Promise<PodaciBaze | null> {
+  if (!klijent || !alati.some((a) => a.name === "get_dashboard")) return null;
+  try {
+    const r = (await klijent.callTool({ name: "get_dashboard", arguments: {} })) as CallToolResult;
+    const a2ui = (r.structuredContent as { a2ui?: { podaci?: unknown; delovi?: unknown } } | undefined)?.a2ui;
+    if (r.isError || !a2ui || typeof a2ui.podaci !== "object" || a2ui.podaci === null || !Array.isArray(a2ui.delovi)) return null;
+    return { podaci: a2ui.podaci as Record<string, unknown>, delovi: a2ui.delovi.filter((d): d is string => typeof d === "string") };
+  } catch {
+    return null;
+  }
+}
+
+/** Delovi data modela koje AI sme da prikaže (savet samo ako ga je procena vratila). */
+function deloviB(): string[] {
+  const delovi = new Set(procitajBazu()?.delovi ?? []);
+  const zaB = procitajA2ui();
+  if (zaB) delovi.add("vazduh");
+  if (typeof zaB?.izAlata.podaci.savet === "string" && zaB.izAlata.podaci.savet) delovi.add("savet");
+  return [...delovi];
+}
+
 function stanicaIzAkcije(akcija: ActionPayload | null, podrazumevana: unknown): string | undefined {
   const izbor = akcija?.context.izbor;
   const prvi = Array.isArray(izbor) ? izbor[0] : izbor;
@@ -149,10 +180,21 @@ function stanicaIzAkcije(akcija: ActionPayload | null, podrazumevana: unknown): 
   return typeof podrazumevana === "string" ? podrazumevana : undefined;
 }
 
-/** Crta ekran verzije B u razgovoru: raspored od AI-ja (ili rezervni), podaci iz MCP alata. */
-function prikaziVerzijuB(izAlata: A2uiIzAlata, argumenti: Record<string, unknown>, aiKomponente: Komponenta[] | null) {
-  // Za stale / no_data / error uvek fiksni ekran sa porukom (FR-09).
-  const koristiAi = izAlata.status === "ok" && aiKomponente !== null;
+/**
+ * Crta ekran verzije B u razgovoru. Raspored: od AI-ja, ili rezervni ekran procene vazduha.
+ * Podaci: iz MCP alata – podaci iz baze (get_dashboard) + procena vazduha sa savetom (ako je pozvana).
+ */
+function prikaziVerzijuB(zaB: PodaciB | null, baza: PodaciBaze | null, aiKomponente: Komponenta[] | null) {
+  const izAlata: A2uiIzAlata | null = zaB?.izAlata ?? null;
+  const argumenti = zaB?.argumenti ?? {};
+  // Za stale / no_data / error procene vazduha uvek fiksni ekran sa porukom (FR-09).
+  const procenaNijeOk = izAlata !== null && izAlata.status !== "ok";
+  const koristiAi = !procenaNijeOk && aiKomponente !== null;
+  // Bez AI ekrana i bez procene vazduha (npr. pitanje o vremenu) – samo tekst odgovora.
+  if (!koristiAi && !izAlata) return;
+  const spoji = (vazduh: Record<string, unknown> | undefined, iz: PodaciBaze | null) => ({ ...(iz?.podaci ?? {}), ...(vazduh ?? {}) });
+  const podaci = spoji(izAlata?.podaci, baza);
+
   const blok = dodaj("ekran-blok");
   const oznaka = document.createElement("div");
   oznaka.className = "oznaka oznaka-b";
@@ -162,16 +204,20 @@ function prikaziVerzijuB(izAlata: A2uiIzAlata, argumenti: Record<string, unknown
   povrsina.className = "a2ui-povrsina";
   blok.appendChild(povrsina);
 
+  // „Osveži“: ponovo isti alati (bez LLM-a), isti raspored, novi podaci.
   const osvezi = async (akcija: ActionPayload | null) => {
     if (!klijent) return;
-    const stationId = stanicaIzAkcije(akcija, argumenti.stationId);
-    const r = (await klijent.callTool({ name: ALAT_PROCENE.B, arguments: stationId ? { stationId } : {} })) as CallToolResult;
-    const novi = a2uiIzRezultata(r);
-    if (novi) ekran.azurirajPodatke(novi.podaci);
+    let vazduh: Record<string, unknown> | undefined;
+    if (izAlata) {
+      const stationId = stanicaIzAkcije(akcija, argumenti.stationId);
+      const r = (await klijent.callTool({ name: ALAT_PROCENE.B, arguments: stationId ? { stationId } : {} })) as CallToolResult;
+      vazduh = a2uiIzRezultata(r)?.podaci;
+    }
+    const novaBaza = baza ? await ucitajPodatkeBaze() : null;
+    ekran.azurirajPodatke(spoji(vazduh ?? izAlata?.podaci, novaBaza ?? baza));
   };
-  const ekran = prikaziA2ui(povrsina, koristiAi ? (aiKomponente as Komponenta[]) : izAlata.komponente, izAlata.podaci, (a) =>
-    osvezi(a),
-  );
+  const komponente = koristiAi ? (aiKomponente as Komponenta[]) : (izAlata as A2uiIzAlata).komponente;
+  const ekran = prikaziA2ui(povrsina, komponente, podaci, (a) => osvezi(a));
 
   // AI raspored nema svoje dugme – „Osveži“ je deo chata, van A2UI ekrana (FR-15).
   if (koristiAi) {
@@ -204,10 +250,14 @@ async function pozoviAlatPrviPut(ime: string, argumenti: Record<string, unknown>
   const rezultat = klijent.callTool({ name: ime, arguments: argumenti }) as Promise<CallToolResult>;
   const gotov = await rezultat;
 
-  // Verzija B: bez iframe-a – pamte se podaci i rezervni raspored; ekran se crta uz odgovor AI-ja.
-  if (v === "B" && ime === ALAT_PROCENE.B) {
-    const izAlata = jeGreskaProcene(gotov) ? null : a2uiIzRezultata(gotov);
-    if (izAlata) poslednjiA2ui = { izAlata, argumenti };
+  // Verzija B: bez iframe-a – pamte se podaci (i rezervni raspored procene); ekran se crta uz odgovor AI-ja.
+  if (v === "B" && ALATI_ZA_EKRAN_B.includes(ime)) {
+    if (ime === ALAT_PROCENE.B) {
+      const izAlata = jeGreskaProcene(gotov) ? null : a2uiIzRezultata(gotov);
+      if (izAlata) poslednjiA2ui = { izAlata, argumenti };
+    }
+    // Za vreme, vodu i mapu AI-ju trebaju svi podaci iz baze – jednom po pitanju.
+    if (!gotov.isError && procitajBazu() === null) podaciBaze = await ucitajPodatkeBaze();
     return tekstZaModel(gotov);
   }
 
@@ -241,6 +291,7 @@ async function posalji(tekst: string) {
   const v = verzija();
   pozivi = new Map();
   poslednjiA2ui = null;
+  podaciBaze = null;
   dodaj("korisnik", tekst);
   poruke.push({ role: "user", content: tekst });
   zauzeto(true);
@@ -255,9 +306,10 @@ async function posalji(tekst: string) {
         kuca.remove();
         // poslednjiA2ui postavlja pozoviAlatPrviPut (TypeScript to ne vidi kroz await), zato čitanje preko funkcije.
         const zaB = procitajA2ui();
-        if (v === "B" && zaB) {
-          if (a2ui?.razlog) console.info("[chat] A2UI rezervni ekran:", a2ui.razlog);
-          prikaziVerzijuB(zaB.izAlata, zaB.argumenti, a2ui?.komponente ?? null);
+        const baza = procitajBazu();
+        if (v === "B" && (zaB || baza)) {
+          if (a2ui?.razlog) console.info("[chat] A2UI bez AI ekrana:", a2ui.razlog);
+          prikaziVerzijuB(zaB, baza, a2ui?.komponente ?? null);
         }
         dodaj("asistent", odgovor.content || "…");
         return;

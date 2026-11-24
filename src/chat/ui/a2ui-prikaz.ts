@@ -11,7 +11,7 @@ import { injectBasicCatalogStyles } from "@a2ui/web_core/v0_9/basic_catalog";
 import { MessageProcessor, type ActionPayload, type ProcessableMessagePayload } from "@a2ui/web_core/v0_9";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { html, render } from "lit";
-import { katalog } from "../../a2ui/katalog.js";
+import { katalogChata as katalog } from "../../a2ui/katalog-chat.js";
 import { KATALOG_ID } from "../../zajednicko/a2ui-katalog.js";
 
 void A2uiSurface; // registruje <a2ui-surface>

@@ -23,6 +23,11 @@ import {
   KATALOG_ID,
   KOMPONENTA_GRAFIKON,
   KOMPONENTA_KATEGORIJA,
+  KOMPONENTA_MAPA,
+  KOMPONENTA_NIZ,
+  KOMPONENTA_PROGNOZA,
+  PUTANJE_DASHBOARD_KOMPONENTI,
+  PUTANJE_DASHBOARDA,
   PUTANJE_KOMPONENTI,
   PUTANJE_PODATAKA,
 } from "../zajednicko/a2ui-katalog.js";
@@ -60,24 +65,68 @@ function sopstveneKomponente(): Record<string, unknown> {
       { tacke: { $ref: `${COMMON}/DataBinding` }, jedinica: { $ref: `${COMMON}/DynamicString` } },
       ["tacke"],
     ),
+    [KOMPONENTA_NIZ]: sema(
+      KOMPONENTA_NIZ,
+      "Linijski grafikon jednog niza: temperatura ili vlažnost vazduha (/meteo/…24h) ili kvalitet vode (/voda/…24h). " +
+        "tacke se vezuju na niz, jedinica je kratak tekst (°C, %, mg/L, pH), naslov kratak tekst bez cifara.",
+      {
+        tacke: { $ref: `${COMMON}/DataBinding` },
+        jedinica: { $ref: `${COMMON}/DynamicString` },
+        naslov: { $ref: `${COMMON}/DynamicString` },
+      },
+      ["tacke"],
+    ),
+    [KOMPONENTA_PROGNOZA]: sema(
+      KOMPONENTA_PROGNOZA,
+      "Prognoza vremena po satima (sat, ikona, temperatura) u jednom redu. Uvek veži sati na /meteo/prognoza.",
+      { sati: { $ref: `${COMMON}/DataBinding` } },
+      ["sati"],
+    ),
+    [KOMPONENTA_MAPA]: sema(
+      KOMPONENTA_MAPA,
+      "Mapa Novog Sada sa senzorima kvaliteta vazduha, obojenim po EAQI kategoriji. Uvek veži tacke na /senzori.",
+      { tacke: { $ref: `${COMMON}/DataBinding` } },
+      ["tacke"],
+    ),
   };
 }
 
+const NOVI_RED = String.fromCharCode(10);
+
 export function uputstvoKataloga(): string {
-  const putanje = Object.entries(PUTANJE_PODATAKA)
-    .map(([p, opis]) => `- ${p}: ${opis}`)
-    .join("\n");
+  const spisak = (o: Record<string, string>) =>
+    Object.entries(o)
+      .map(([p, opis]) => `- ${p}: ${opis}`)
+      .join(NOVI_RED);
   return [
-    "Ovaj katalog služi za ekran o kvalitetu vazduha. Podaci su već u data modelu – ti ih samo vezuješ preko putanja ($/putanja).",
+    "Ovaj katalog služi za ekrane o kvalitetu vazduha, vremenu i kvalitetu vode u Novom Sadu.",
+    "Podaci su već u data modelu – ti ih samo vezuješ preko putanja ($/putanja).",
     "NIKAD ne dodeljuj vrednosti podacima (bez `$/x = …`) i ne piši brojeve u tekst.",
-    "Statički tekst (naslovi) je kratak, na srpskom, bez cifara.",
-    "Putanje za Text:",
-    putanje,
-    `Za kategoriju koristi ${KOMPONENTA_KATEGORIJA}(naziv=$/kategorija/naziv, nivo=$/kategorija/nivo).`,
-    `Za grafikon koristi ${KOMPONENTA_GRAFIKON}(tacke=$/istorija).`,
+    "Statički tekst (naslovi, oznake) je kratak, na srpskom, bez cifara.",
+    "Vazduh – putanje za Text:",
+    spisak(PUTANJE_PODATAKA),
+    `Kategorija vazduha: ${KOMPONENTA_KATEGORIJA}(naziv=$/kategorija/naziv, nivo=$/kategorija/nivo). Grafikon PM: ${KOMPONENTA_GRAFIKON}(tacke=$/istorija).`,
+    "Vreme, voda, senzori – putanje za Text:",
+    spisak(PUTANJE_DASHBOARDA),
+    "Nizovi – samo za sopstvene komponente:",
+    spisak(PUTANJE_DASHBOARD_KOMPONENTI),
     "Ako prikazuješ $/savet, prikaži i $/osnov. Napravi tačno jedan surface.",
-  ].join("\n");
+  ].join(NOVI_RED);
 }
+
+/**
+ * Kako AI slaže izgled: prema pitanju, ne uvek isto. Ide u sistemsku poruku koraka sa ekranom.
+ */
+export const UPUTSTVO_DIZAJNA = [
+  "Ti si dizajner ekrana. Izgled sastavi PREMA PITANJU – ne pravi uvek isti ekran:",
+  "- pitanje o vazduhu, šetnji ili treningu: kategorija, PM vrednosti, savet i osnov (ako postoje), po želji grafikon PM;",
+  "- pitanje o vremenu: velika temperatura sa ikonom i opisom, red sa vlažnošću, vetrom i padavinama, prognoza po satima, po želji grafikon temperature;",
+  "- pitanje o vodi: kartice sa kiseonikom, pH i temperaturom vode, vreme merenja, grafikon koji je korisnik tražio (kiseonik, pH ili temperatura);",
+  "- pitanje o senzorima, mapi ili lokacijama: mapa senzora i opis senzora;",
+  "- opšte pitanje („kakvo je stanje“, „pregled“): kratak pregled svih dostupnih delova, po jedna kartica za svaki.",
+  "Koristi Card za grupe, Row da vrednosti stoje jedna pored druge, Text sa variant h2/h3 za naslove i caption za sitne napomene, Divider između celina.",
+  "Prikazuj samo delove koji su navedeni kao dostupni. Ako korisnik kaže kako želi da vidi podatke, uradi tačno to.",
+].join(NOVI_RED);
 
 /** Naš katalog za AI: osnovni v0.9 (skraćen) + sopstvene komponente, sa uputstvom. */
 export function katalogZaAgenta(putanjaOsnovnog?: string): CatalogConfig {
@@ -101,14 +150,21 @@ export function katalogZaAgenta(putanjaOsnovnog?: string): CatalogConfig {
     ...osnovni,
     $id: KATALOG_ID,
     catalogId: KATALOG_ID,
-    title: "Kvalitet vazduha",
+    title: "Kvalitet vazduha, vreme i voda",
     instructions: uputstvoKataloga(),
     components: { ...osnovni.components, ...sopstvene },
     $defs: { ...osnovni.$defs, anyComponent },
   };
   const katalog = new InMemoryCatalogProvider(nas, "v0.9", KATALOG_ID).load();
   return new CatalogConfig(katalog, [
-    new ComponentPruningTransformer([...OSNOVNE, KOMPONENTA_KATEGORIJA, KOMPONENTA_GRAFIKON]),
+    new ComponentPruningTransformer([
+      ...OSNOVNE,
+      KOMPONENTA_KATEGORIJA,
+      KOMPONENTA_GRAFIKON,
+      KOMPONENTA_NIZ,
+      KOMPONENTA_PROGNOZA,
+      KOMPONENTA_MAPA,
+    ]),
     new FunctionPruningTransformer(null),
   ]);
 }
@@ -122,7 +178,12 @@ export function napraviProcesor(katalog: CatalogConfig = katalogZaAgenta()): A2u
 type Komponenta = { id: string; component: string } & Record<string, unknown>;
 export type IshodA2ui = { ok: true; komponente: Komponenta[] } | { ok: false; razlog: string };
 
-const DOZVOLJENE = new Set<string>([...Object.keys(PUTANJE_PODATAKA), ...PUTANJE_KOMPONENTI]);
+const DOZVOLJENE = new Set<string>([
+  ...Object.keys(PUTANJE_PODATAKA),
+  ...PUTANJE_KOMPONENTI,
+  ...Object.keys(PUTANJE_DASHBOARDA),
+  ...Object.keys(PUTANJE_DASHBOARD_KOMPONENTI),
+]);
 
 function sveVeze(v: unknown, izlaz: string[]) {
   if (Array.isArray(v)) v.forEach((x) => sveVeze(x, izlaz));
