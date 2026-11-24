@@ -48,15 +48,25 @@ const poruke: ChatPoruka[] = [];
 
 // ─── Verzija ────────────────────────────────────────────────────────────────
 
-/**
- * Chat koristi verziju A (MCP App). Verzija B (izvorni A2UI) ostaje u kodu i otvara se samo
- * preko adrese `?verzija=B` (npr. za poređenje na prezentaciji) – na stranici nema prekidača.
- */
-const IZABRANA_VERZIJA: Verzija = parametri.get("verzija") === "B" ? "B" : "A";
-
+/** Prekidač u zaglavlju chata bira verziju A (MCP App) ili B (A2UI); `?verzija=B` je bira odmah. */
 function verzija(): Verzija {
-  return IZABRANA_VERZIJA;
+  const izabrana = document.querySelector<HTMLInputElement>('input[name="verzija"]:checked');
+  return izabrana?.value === "B" ? "B" : "A";
 }
+
+if (parametri.get("verzija") === "B") {
+  (document.getElementById("verzija-b") as HTMLInputElement).checked = true;
+}
+
+// Promena verzije počinje novi razgovor, da bi se na prezentaciji za svaku verziju videlo
+// pitanje → poziv alata → ekran → odgovor.
+document.querySelectorAll<HTMLInputElement>('input[name="verzija"]').forEach((r) =>
+  r.addEventListener("change", () => {
+    poruke.length = 0;
+    kontekstEkrana = null;
+    if (razgovor.childElementCount > 0) dodaj("razdelnik", `Prebačeno na ${OPIS_VERZIJE[verzija()]} – novi razgovor`);
+  }),
+);
 
 // ─── Otvaranje i zatvaranje chata (okrugla ikonica dole desno) ──────────────
 

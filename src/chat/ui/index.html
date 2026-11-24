@@ -452,9 +452,41 @@
         padding: 14px 12px 12px 18px;
         border-bottom: 1px solid var(--ivica);
         display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .chat-red {
+        display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
+      }
+      .prekidac {
+        display: flex;
+        background: var(--pozadina);
+        border-radius: 12px;
+        padding: 3px;
+      }
+      .prekidac input {
+        position: absolute;
+        opacity: 0;
+      }
+      .prekidac label {
+        flex: 1;
+        text-align: center;
+        padding: 6px 8px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--sporedno);
+      }
+      .prekidac input:checked + label {
+        background: var(--tamna);
+        color: #fff;
+      }
+      .prekidac input:focus-visible + label {
+        outline: 2px solid var(--plava);
       }
       .chat-naslov {
         display: flex;
@@ -541,7 +573,7 @@
         color: #fff;
       }
       .oznaka-a {
-        display: none; /* chat ima samo verziju A, oznaka nije potrebna */
+        background: var(--plava);
       }
       .oznaka-b {
         background: var(--b);
@@ -694,14 +726,22 @@
 
       <section class="chat" id="chat" role="dialog" aria-label="Eko asistent" hidden>
         <header>
-          <div class="chat-naslov">
-            <span aria-hidden="true" style="font-size: 1.4rem">✨</span>
-            <div>
-              <h2>Eko asistent</h2>
-              <span class="sitno"><span class="tacka-online"></span>Pitajte za šetnju, trening ili vreme</span>
+          <div class="chat-red">
+            <div class="chat-naslov">
+              <span aria-hidden="true" style="font-size: 1.4rem">✨</span>
+              <div>
+                <h2>Eko asistent</h2>
+                <span class="sitno"><span class="tacka-online"></span>Pitajte za šetnju, trening ili vreme</span>
+              </div>
             </div>
+            <button type="button" class="zatvori-chat" id="zatvori-chat" aria-label="Zatvori chat">✕</button>
           </div>
-          <button type="button" class="zatvori-chat" id="zatvori-chat" aria-label="Zatvori chat">✕</button>
+          <div class="prekidac" role="radiogroup" aria-label="Verzija ekrana">
+            <input type="radio" name="verzija" id="verzija-a" value="A" checked />
+            <label for="verzija-a">Verzija A · MCP App</label>
+            <input type="radio" name="verzija" id="verzija-b" value="B" />
+            <label for="verzija-b">Verzija B · A2UI</label>
+          </div>
         </header>
 
         <div id="razgovor" aria-live="polite"></div>
