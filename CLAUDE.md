@@ -29,8 +29,8 @@ npm run typecheck    # tsc bez emitovanja
 Ako neka od ovih skripti još ne postoji u `package.json`, reci to i predloži da se doda; ne preskači proveru ćutke.
 
 Chat aplikacija (demo): `npm run demo` → http://localhost:3010 (ili `npm start` i `npm run chat` u dva terminala).
-Stranica je kontrolna tabla; chat se otvara okruglom ikonicom dole desno i koristi verziju A (MCP App).
-Verzija B (izvorni A2UI) nema prekidač na stranici: otvara se sa `?verzija=B` (za poređenje). `?chat=1` odmah otvara chat,
+Stranica je kontrolna tabla; chat se otvara okruglom ikonicom dole desno. Prekidač „Verzija A / B“ u zaglavlju chata
+bira ekran (A = MCP App, B = izvorni A2UI); `?verzija=B` odmah bira B. `?chat=1` odmah otvara chat,
 `?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario).
 
 Test host za razvoj (u drugom terminalu, iz kloniranog ext-apps repoa, van ovog projekta):
