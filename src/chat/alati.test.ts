@@ -5,6 +5,7 @@ import {
   alatiZaVerziju,
   argumentiPoziva,
   jeGreskaProcene,
+  sazmiZaA2ui,
   sistemskaPoruka,
   tekstZaModel,
   trebaA2uiUputstvo,
@@ -168,5 +169,20 @@ describe("verzija B – izvorni A2UI", () => {
     assert.equal(trebaA2uiUputstvo("A", poslePorocene), false);
     // novo pitanje: stara procena se ne računa
     assert.equal(trebaA2uiUputstvo("B", [...poslePorocene, { role: "user" as const }]), false);
+  });
+
+  test("B: ekran i posle vremena ili vode, ali ne posle greške alata", () => {
+    const poziv = (id: string, ime: string) => ({ id, type: "function" as const, function: { name: ime, arguments: "{}" } });
+    const pitanje = { role: "user" as const };
+    const vreme = [pitanje, { role: "assistant" as const, tool_calls: [poziv("v", "get_weather")] }, { role: "tool" as const, tool_call_id: "v", content: "Vreme u Novom Sadu…" }];
+    assert.equal(trebaA2uiUputstvo("B", vreme), true);
+    const voda = [pitanje, { role: "assistant" as const, tool_calls: [poziv("w", "get_water_latest")] }, { role: "tool" as const, tool_call_id: "w", content: "Greška alata: baza" }];
+    assert.equal(trebaA2uiUputstvo("B", voda), false);
+  });
+
+  test("sažetak za A2UI navodi dostupne delove", () => {
+    const s = sazmiZaA2ui([{ role: "user", content: "Kakvo je vreme?" }], ["vreme", "senzori"]);
+    assert.equal(s.length, 3);
+    assert.match(String(s[2]?.content), /vreme, senzori/);
   });
 });

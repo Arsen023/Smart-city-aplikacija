@@ -30,3 +30,65 @@ export const PUTANJE_PODATAKA: Record<string, string> = {
 
 /** Putanje koje koriste samo sopstvene komponente (značka, grafikon) – AI ih ne piše u Text. */
 export const PUTANJE_KOMPONENTI = ["/kategorija/naziv", "/kategorija/nivo", "/istorija"] as const;
+
+// ─── Podaci iz baze za izvorni A2UI u chatu (get_dashboard → a2ui) ─────────
+
+/** Sopstvene komponente za podatke iz baze (vreme, voda, mapa) – samo u chatu (verzija B). */
+export const KOMPONENTA_NIZ = "GrafikonNiz";
+export const KOMPONENTA_PROGNOZA = "PrognozaSati";
+export const KOMPONENTA_MAPA = "MapaSenzora";
+
+/** Tekstualne putanje iz get_dashboard (src/server/dashboard-a2ui.ts) koje AI sme da veže u Text. */
+export const PUTANJE_DASHBOARDA: Record<string, string> = {
+  "/meteo/temperatura": "trenutna temperatura vazduha (npr. „5,3 °C“)",
+  "/meteo/opis": "opis vremena (npr. „Oblačno“)",
+  "/meteo/ikona": "ikona vremena (emodži)",
+  "/meteo/vlaznost": "relativna vlažnost vazduha",
+  "/meteo/vetar": "brzina vetra",
+  "/meteo/padavine": "padavine u poslednjem satu",
+  "/meteo/vremeMerenja": "kada je izmereno vreme i izvor",
+  "/voda/uredjaj": "naziv uređaja za kvalitet vode",
+  "/voda/kiseonik": "rastvoreni kiseonik u vodi",
+  "/voda/zasicenje": "zasićenje vode kiseonikom",
+  "/voda/ph": "pH vode",
+  "/voda/temperatura": "temperatura vode",
+  "/voda/vremeMerenja": "kada je poslednji put merena voda",
+  "/senzoriOpis": "koliko senzora je na mapi i odakle su",
+};
+
+/** Nizovi iz get_dashboard – vezuju ih samo sopstvene komponente (GrafikonNiz, PrognozaSati, MapaSenzora). */
+export const PUTANJE_DASHBOARD_KOMPONENTI: Record<string, string> = {
+  "/meteo/prognoza": `prognoza za naredne sate – ${"PrognozaSati"}(sati=…)`,
+  "/meteo/temperatura24h": `temperatura vazduha za 24 h – ${"GrafikonNiz"}(tacke=…, jedinica="°C")`,
+  "/meteo/vlaznost24h": `vlažnost vazduha za 24 h – ${"GrafikonNiz"}(tacke=…, jedinica="%")`,
+  "/voda/kiseonik24h": `kiseonik u vodi kroz vreme – ${"GrafikonNiz"}(tacke=…, jedinica="mg/L")`,
+  "/voda/ph24h": `pH vode kroz vreme – ${"GrafikonNiz"}(tacke=…, jedinica="pH")`,
+  "/voda/temperatura24h": `temperatura vode kroz vreme – ${"GrafikonNiz"}(tacke=…, jedinica="°C")`,
+  "/senzori": `senzori kvaliteta vazduha sa koordinatama – ${"MapaSenzora"}(tacke=…)`,
+};
+
+/** Jedna tačka za GrafikonNiz: oznaka na x osi (npr. "14:00") i vrednost (`null` = nema merenja). */
+export interface TackaNiza {
+  oznaka: string;
+  vrednost: number | null;
+}
+
+/** Jedan sat prognoze za PrognozaSati. */
+export interface SatPrognoze {
+  sat: string;
+  ikona: string;
+  temperatura: string;
+  opis: string;
+}
+
+/** Jedan senzor za MapaSenzora. */
+export interface TackaMape {
+  naziv: string;
+  lat: number;
+  lon: number;
+  /** EAQI nivo (1–6) ili `null` kad nema procene. */
+  nivo: number | null;
+  kategorija: string;
+  opis: string;
+  model: boolean;
+}

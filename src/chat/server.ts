@@ -12,7 +12,7 @@
 import express, { type Request, type Response } from "express";
 import path from "node:path";
 import { z } from "zod";
-import { obradiOdgovor, napraviProcesor } from "./a2ui-agent.js";
+import { obradiOdgovor, napraviProcesor, UPUTSTVO_DIZAJNA } from "./a2ui-agent.js";
 import { sazmiZaA2ui, sistemskaPoruka, trebaA2uiUputstvo } from "./alati.js";
 
 /** A2UI procesor (zvanični SDK) – pravi se jednom, katalog se ne menja. */
@@ -70,6 +70,8 @@ const ZahtevSema = z.object({
   kontekst: z.string().max(4000).optional(),
   /** Verzija B: chat stranica ima ispravne A2UI podatke iz alata (procena nije greška). */
   a2uiPodaci: z.boolean().optional(),
+  /** Koji delovi data modela postoje – AI prikazuje samo njih. */
+  a2uiDelovi: z.array(z.enum(["vazduh", "savet", "vreme", "voda", "senzori"])).max(5).optional(),
 });
 
 const OdgovorGroqSema = z.object({
@@ -106,7 +108,7 @@ app.post("/api/chat", async (req: Request, res: Response) => {
     return;
   }
 
-  const { verzija, poruke, alati, kontekst, a2uiPodaci } = ulaz.data;
+  const { verzija, poruke, alati, kontekst, a2uiPodaci, a2uiDelovi } = ulaz.data;
   const sistem = [{ role: "system" as const, content: sistemskaPoruka(verzija) }];
   if (kontekst) sistem.push({ role: "system", content: `Šta korisnik trenutno gleda na ekranu: ${kontekst}` });
   // Samo kad je procena uspela – posle greške (npr. pogrešan id stanice) model normalno pokuša ponovo.
@@ -117,6 +119,8 @@ app.post("/api/chat", async (req: Request, res: Response) => {
       content:
         "Sada odgovori: najviše 2 rečenice teksta, pa ekran u JEDNOM <a2ui> bloku po pravilima ispod. " +
         "Podatke ne upisuj – samo ih veži preko putanja.\n\n" +
+        UPUTSTVO_DIZAJNA +
+        "\n\n" +
         dobijA2ui().promptSnippet,
     });
   }
@@ -124,7 +128,8 @@ app.post("/api/chat", async (req: Request, res: Response) => {
   // Korak sa A2UI ekranom: sažet razgovor (pitanje + rezultat procene), bez alata – vidi sazmiZaA2ui.
   const telo = JSON.stringify(
     sastaviEkran
-      ? { model: A2UI_MODEL, messages: [...sistem, ...sazmiZaA2ui(poruke)], temperature: 0.2, max_tokens: 1500 }
+      ? // Malo viša temperatura: raspored prati pitanje i ne izgleda uvek isto (provere ostaju iste).
+        { model: A2UI_MODEL, messages: [...sistem, ...sazmiZaA2ui(poruke, a2uiDelovi)], temperature: 0.5, max_tokens: 1800 }
       : {
           model: MODEL,
           messages: [...sistem, ...poruke],

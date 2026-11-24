@@ -8,15 +8,21 @@ const procesor = napraviProcesor();
 const blok = (telo: string) => `Evo pregleda.\n<a2ui>\nsurface("kv")\n${telo}\n</a2ui>\nPozdrav.`;
 
 describe("katalog za AI", () => {
-  test("sadrži samo potrebne osnovne komponente i naše dve", () => {
+  test("sadrži samo potrebne osnovne komponente i naše (vazduh, vreme, voda, mapa)", () => {
     const imena = [...(katalogZaAgenta().transformedCatalog as unknown as { components: Map<string, unknown> }).components.keys()];
-    assert.deepEqual(imena.sort(), ["Card", "Column", "Divider", KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA, "Row", "Text"].sort());
+    assert.deepEqual(
+      imena.sort(),
+      ["Card", "Column", "Divider", KOMPONENTA_GRAFIKON, KOMPONENTA_KATEGORIJA, "GrafikonNiz", "PrognozaSati", "MapaSenzora", "Row", "Text"].sort(),
+    );
   });
 
   test("uputstvo za AI je skraćeno i pominje putanje i zabranu brojeva", () => {
     const s = procesor.promptSnippet;
-    assert.ok(s.length < 12000, `uputstvo ima ${s.length} znakova`);
+    // ~3,5 hiljade tokena: staje u Groq limit od 8000 tokena/min zajedno sa pitanjem i odgovorom
+    assert.ok(s.length < 14000, `uputstvo ima ${s.length} znakova`);
     assert.match(s, /\/pm25Broj/);
+    assert.match(s, /\/meteo\/prognoza/);
+    assert.match(s, /\/senzori/);
     assert.match(s, /ne piši brojeve/);
   });
 });
@@ -100,5 +106,31 @@ describe("proveriA2uiPoruke", () => {
   test("dva ekrana → odbija", () => {
     const uc = { updateComponents: { components: [{ id: "root", component: "Text", text: "Naslov" }] } };
     assert.equal(proveriA2uiPoruke([uc, uc]).ok, false);
+  });
+});
+
+describe("ekrani sa podacima iz baze", () => {
+  test("vreme, voda i mapa: dozvoljene putanje prolaze", () => {
+    const r = proveriA2uiPoruke([
+      {
+        updateComponents: {
+          components: [
+            { id: "root", component: "Column", children: ["t", "p", "g", "m"] },
+            { id: "t", component: "Text", text: { path: "/meteo/temperatura" } },
+            { id: "p", component: "PrognozaSati", sati: { path: "/meteo/prognoza" } },
+            { id: "g", component: "GrafikonNiz", tacke: { path: "/voda/kiseonik24h" }, jedinica: "mg/L" },
+            { id: "m", component: "MapaSenzora", tacke: { path: "/senzori" } },
+          ],
+        },
+      },
+    ]);
+    assert.equal(r.ok, true);
+  });
+
+  test("nepoznata putanja se odbija", () => {
+    const r = proveriA2uiPoruke([
+      { updateComponents: { components: [{ id: "root", component: "Text", text: { path: "/meteo/lozinka" } }] } },
+    ]);
+    assert.deepEqual(r, { ok: false, razlog: "nepoznata putanja /meteo/lozinka" });
   });
 });

@@ -68,7 +68,7 @@ function bezParametraPrikaz(a: McpAlat): McpAlat {
  * kao običan tekst – bez istorije poziva alata i bez alata (model tada ne pokušava nove pozive,
  * a troši se mnogo manje tokena).
  */
-export function sazmiZaA2ui(poruke: ChatPoruka[]): ChatPoruka[] {
+export function sazmiZaA2ui(poruke: ChatPoruka[], delovi: readonly string[] = []): ChatPoruka[] {
   const poslednjeUser = poruke.map((p) => p.role).lastIndexOf("user");
   const pitanje = poruke[poslednjeUser]?.content ?? "";
   const rezultati = poruke
@@ -78,23 +78,35 @@ export function sazmiZaA2ui(poruke: ChatPoruka[]): ChatPoruka[] {
   return [
     { role: "user", content: pitanje },
     { role: "user", content: `Rezultat alata (podaci su već u data modelu ekrana):\n${rezultati.join("\n\n")}` },
+    ...(delovi.length
+      ? [{ role: "user" as const, content: `Dostupni delovi data modela: ${delovi.join(", ")}. Ostale delove ne prikazuj.` }]
+      : []),
   ];
 }
 
+/** Alati čiji rezultat ima podatke za ekran verzije B (vazduh, vreme, voda). */
+export const ALATI_ZA_EKRAN_B: readonly string[] = [ALAT_PROCENE.B, ALAT_VREMENA, ...ALATI_VODE];
+
 /**
- * A2UI uputstvo za chat model ide tek kad u tekućem pitanju stigne rezultat procene verzije B
- * (ne posle get_stations) – tada model ima podatke i treba samo da sastavi ekran; štede se tokeni.
+ * A2UI uputstvo za chat model ide tek kad u tekućem pitanju stigne uspešan rezultat alata sa podacima
+ * (procena vazduha, vreme ili voda – ne posle get_stations); tada model ima podatke i samo sastavlja ekran.
  */
 export function trebaA2uiUputstvo(
   verzija: Verzija,
-  poruke: Array<Pick<ChatPoruka, "role" | "tool_calls" | "tool_call_id">>,
+  poruke: Array<Pick<ChatPoruka, "role" | "tool_calls" | "tool_call_id"> & { content?: string | null }>,
 ): boolean {
   if (verzija !== "B") return false;
   const odPitanja = poruke.slice(poruke.map((p) => p.role).lastIndexOf("user") + 1);
   const pozivi = new Set(
-    odPitanja.flatMap((p) => (p.tool_calls ?? []).filter((t) => t.function.name === ALAT_PROCENE.B).map((t) => t.id)),
+    odPitanja.flatMap((p) => (p.tool_calls ?? []).filter((t) => ALATI_ZA_EKRAN_B.includes(t.function.name)).map((t) => t.id)),
   );
-  return odPitanja.some((p) => p.role === "tool" && p.tool_call_id !== undefined && pozivi.has(p.tool_call_id));
+  return odPitanja.some(
+    (p) =>
+      p.role === "tool" &&
+      p.tool_call_id !== undefined &&
+      pozivi.has(p.tool_call_id) &&
+      !(typeof p.content === "string" && p.content.startsWith("Greška alata")),
+  );
 }
 
 function samoZaEkran(a: McpAlat): boolean {
@@ -179,9 +191,11 @@ export function sistemskaPoruka(verzija: Verzija): string {
     ...(verzija === "B"
       ? [
           "EKRAN (verzija B)",
-          "- Za procenu vazduha ekran sastavljaš TI, u A2UI bloku (pravila dobijaš posle rezultata alata).",
+          "- Ekran za vazduh, vreme i vodu sastavljaš TI, u A2UI bloku (pravila dobijaš posle rezultata alata).",
           "- Ako korisnik kaže KAKO želi da vidi podatke (npr. „samo grafikon“, „samo kategoriju i savet“, „krupno vrednosti“), " +
-            "složi ekran tačno po toj želji; inače napravi pregledan ekran sa stanicom, vrednostima, vremenom, kategorijom, grafikonom, savetom i osnovom.",
+            "složi ekran tačno po toj želji; inače izgled prilagodi pitanju.",
+          `- Za pitanja o senzorima, mapi ili lokacijama merenja pozovi ${ALAT_PROCENE.B} bez stationId – posle njega ekran može da prikaže i mapu senzora.`,
+          "- Za opšte pitanje („kakvo je stanje“, „pregled“) pozovi procenu vazduha – ekran tada može da prikaže i vreme, vodu i mapu.",
           "",
         ]
       : []),
