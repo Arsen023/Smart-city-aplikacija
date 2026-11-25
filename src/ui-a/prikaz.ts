@@ -8,7 +8,7 @@ import type { Rezultat, Status, Velicina } from "../core/tipovi.js";
 import { JEDINICA_PM } from "../core/tipovi.js";
 import { prikazDatumVreme } from "../core/vreme.js";
 import { bojeKategorije } from "../zajednicko/boje-eaqi.js";
-import { protekloVreme, tekstVrednosti } from "../zajednicko/format.js";
+import { protekloVreme, tekstBroja, tekstVrednosti } from "../zajednicko/format.js";
 import { geometrija, PODRAZUMEVANE, type Dimenzije, type Grafikon } from "../zajednicko/geometrija.js";
 
 export type StanjeEkrana =
@@ -25,6 +25,8 @@ export interface ModelEkrana {
   stanicaId: string | null;
   /** Element 2: "PM2.5 12,4 µg/m³", "PM10 nije dostupno". `null` = ne prikazuje se. */
   vrednosti: string[] | null;
+  /** Element 2 kao dve kartice (Stitch izgled): veliki broj + jedinica; bez vrednosti „nije dostupno“, bez jedinice. */
+  kartice: KarticaVrednosti[] | null;
   /** Element 3: "Merenje: 16.11.2026. 09:00 · pre 20 min" (isti tekst kao u verziji B). */
   vreme: string | null;
   /** Element 4: boja + naziv (nikad samo boja). */
@@ -38,6 +40,14 @@ export interface ModelEkrana {
   osnov: string | null;
   pravilo: string | null;
   pokusajPonovo: boolean;
+}
+
+export interface KarticaVrednosti {
+  velicina: Velicina;
+  /** "82,9" ili "nije dostupno" – nikad "0" za vrednost koje nema (pravilo 5). */
+  broj: string;
+  /** "µg/m³", ili `null` kad vrednosti nema. */
+  jedinica: string | null;
 }
 
 export interface ModelGrafikona {
@@ -59,6 +69,7 @@ const VELICINE: readonly Velicina[] = ["PM2.5", "PM10"];
 
 const prazno: Omit<ModelEkrana, "stanje" | "naslov" | "stanicaId"> = {
   vrednosti: null,
+  kartice: null,
   vreme: null,
   grafikon: null,
   kategorija: null,
@@ -79,6 +90,16 @@ function vrednosti(r: Rezultat): string[] {
   );
 }
 
+/** Iste vrednosti kao gore, ali kao kartice: broj i jedinica odvojeno. */
+function kartice(r: Rezultat): KarticaVrednosti[] {
+  return VELICINE.map((velicina) => {
+    const v = r.values.find((x) => x.velicina === velicina);
+    return v && v.vrednost !== null
+      ? { velicina, broj: tekstBroja(v.vrednost), jedinica: v.jedinica }
+      : { velicina, broj: "nije dostupno", jedinica: null };
+  });
+}
+
 /** Grafikon za ok i stale (i stari podaci se vide, spec 8.1); bez ijedne vrednosti – ne crta se. */
 function grafikon(r: Rezultat): ModelGrafikona | null {
   const imaVrednost = r.history.some((t) => t.pm25 !== null || t.pm10 !== null);
@@ -87,7 +108,7 @@ function grafikon(r: Rezultat): ModelGrafikona | null {
     dim: PODRAZUMEVANE,
     g: geometrija(r.history),
     opis: `Grafikon PM2.5 i PM10 za poslednja 24 h, u ${JEDINICA_PM}`,
-    potpis: `${JEDINICA_PM}, poslednja 24 h`,
+    potpis: `Poslednja 24 h (${JEDINICA_PM})`,
   };
 }
 
@@ -135,6 +156,7 @@ export function modelEkrana(s: StanjeEkrana): ModelEkrana {
     ...prazno,
     ...osnovno,
     vrednosti: vrednosti(r),
+    kartice: kartice(r),
     vreme,
     grafikon: grafikon(r),
     kategorija,

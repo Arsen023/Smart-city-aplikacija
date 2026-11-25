@@ -167,7 +167,7 @@ describe("ekran A – grafikon 24 h (element 5)", () => {
     assert.ok(g);
     assert.ok(g.g.pm25.startsWith("M"));
     assert.ok(g.g.pm10.startsWith("M"));
-    assert.equal(g.potpis, "µg/m³, poslednja 24 h");
+    assert.equal(g.potpis, "Poslednja 24 h (µg/m³)");
     assert.match(g.opis, /PM2\.5 i PM10.*µg\/m³/);
   });
 
@@ -199,5 +199,27 @@ describe("ekran A – grafikon 24 h (element 5)", () => {
     assert.equal(m({ ...rezultatGreska(), history: istorija }).grafikon, null);
     assert.equal(modelEkrana({ vrsta: "greska" }).grafikon, null);
     assert.equal(modelEkrana({ vrsta: "ucitavanje" }).grafikon, null);
+  });
+});
+
+describe("ekran A – kartice PM2.5 i PM10 (Stitch izgled)", () => {
+  test("ok: broj sa decimalnim zarezom i jedinica odvojeno", () => {
+    assert.deepEqual(m(rezultatS1()).kartice, [
+      { velicina: "PM2.5", broj: "3,7", jedinica: "µg/m³" },
+      { velicina: "PM10", broj: "12,4", jedinica: "µg/m³" },
+    ]);
+  });
+
+  test("S4: bez PM2.5 piše „nije dostupno“, bez jedinice, nikad 0", () => {
+    const k = m(rezultatS4()).kartice;
+    assert.deepEqual(k?.[0], { velicina: "PM2.5", broj: "nije dostupno", jedinica: null });
+    assert.notEqual(k?.[0]?.broj, "0");
+  });
+
+  test("stale (S3): kartice se vide, no_data i greška: ne", () => {
+    assert.ok(m(rezultatS3()).kartice);
+    assert.equal(m(rezultatS6()).kartice, null);
+    assert.equal(m(rezultatGreska()).kartice, null);
+    assert.equal(modelEkrana({ vrsta: "ucitavanje" }).kartice, null);
   });
 });

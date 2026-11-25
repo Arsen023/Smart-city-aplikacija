@@ -4,148 +4,190 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kvalitet vazduha</title>
+  <!--
+    Izgled po Google Stitch skici (docs/stitch/stitch-a-sa-podacima.html, stitch-a-bez-preporuke.html).
+    Iz Stitch-a su raspored i stil; podatke upisuje crtaj.ts po id-jevima. Boje kategorije i linija
+    grafikona dolaze iz src/zajednicko/ (iste kao u verziji B), a boje i fontovi hosta imaju prednost.
+  -->
   <style>
-    /* Rezervne vrednosti kad host ne pošalje svoje promenljive (applyHostStyleVariables). */
+    /* Rezervne vrednosti (Stitch paleta) kad host ne pošalje svoje promenljive. */
     :root {
       color-scheme: light;
       --r-bg: #ffffff;
-      --r-bg-2: #f4f5f7;
-      --r-text: #1b1d21;
-      --r-text-2: #555b66;
-      --r-border: #d9dce1;
-      --r-warn-bg: #fff4d6;
-      --r-warn-text: #5c4200;
-      --r-danger-text: #8a1c1c;
+      --r-sub: #f8fafc;
+      --r-border: #e2e8f0;
+      --r-text: #0f172a;
+      --r-text-2: #475569;
+      --r-muted: #64748b;
+      --r-btn-border: #cbd5e1;
+      --r-warn-bg: #fffbeb;
+      --r-warn-border: #f59e0b;
+      --r-warn-text: #92400e;
+      --r-danger-text: #991b1b;
     }
     :root[data-theme="dark"] {
       color-scheme: dark;
       --r-bg: #1e1f22;
-      --r-bg-2: #2a2c30;
-      --r-text: #ececee;
-      --r-text-2: #a9adb6;
+      --r-sub: #26282c;
       --r-border: #3b3e44;
+      --r-text: #ececee;
+      --r-text-2: #b8bcc4;
+      --r-muted: #9aa0aa;
+      --r-btn-border: #4a4e56;
       --r-warn-bg: #3d3214;
+      --r-warn-border: #d69e2e;
       --r-warn-text: #f5dd9a;
       --r-danger-text: #ff9b9b;
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--color-background-primary, var(--r-bg));
       color: var(--color-text-primary, var(--r-text));
-      font-family: var(--font-sans, system-ui, sans-serif);
+      font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
       font-size: var(--font-text-md-size, 15px);
-      line-height: var(--font-text-md-line-height, 1.45);
+      line-height: 1.45;
     }
 
-    #koren { padding: 12px; display: flex; flex-direction: column; gap: 12px; min-height: 260px; }
-
-    header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    h1 {
-      flex: 1 1 auto;
-      margin: 0;
-      font-size: var(--font-heading-sm-size, 17px);
-      line-height: var(--font-heading-sm-line-height, 1.3);
-      font-weight: var(--font-weight-semibold, 600);
+    /* Kartica (widget) */
+    #koren {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 260px;
     }
-    .kontrole { display: flex; gap: 8px; align-items: center; }
+    .sub {
+      background: var(--color-background-secondary, var(--r-sub));
+      border: var(--border-width-regular, 1px) solid var(--color-border-primary, var(--r-border));
+      border-radius: 12px;
+    }
 
+    /* 1. Zaglavlje: naslov, izbor stanice, Osveži */
+    .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    h1 { font-size: 1.05rem; font-weight: var(--font-weight-semibold, 600); line-height: 1.3; }
+    .header-controls { display: flex; align-items: center; gap: 8px; }
     select, button {
       font: inherit;
-      font-size: var(--font-text-sm-size, 14px);
+      font-size: 0.875rem;
+      font-weight: 500;
       color: inherit;
-      background: var(--color-background-secondary, var(--r-bg-2));
-      border: var(--border-width-regular, 1px) solid var(--color-border-primary, var(--r-border));
-      border-radius: var(--border-radius-md, 8px);
-      padding: 6px 10px;
+      background: var(--color-background-primary, var(--r-bg));
+      border: 1px solid var(--color-border-primary, var(--r-btn-border));
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
     }
-    button { cursor: pointer; font-weight: var(--font-weight-medium, 500); }
+    button:hover:not(:disabled) { background: var(--color-background-secondary, var(--r-sub)); }
     button:disabled, select:disabled { cursor: default; opacity: 0.6; }
-    button:focus-visible, select:focus-visible {
-      outline: 2px solid var(--color-ring-primary, #3b82f6);
-      outline-offset: 2px;
-    }
+    button:focus-visible, select:focus-visible { outline: 2px solid var(--color-ring-primary, #3b82f6); outline-offset: 2px; }
 
-    .merenje { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
-    #vrednosti { list-style: none; margin: 0; padding: 0; display: flex; gap: 16px; flex-wrap: wrap; }
-    #vrednosti li { font-size: var(--font-text-lg-size, 17px); font-weight: var(--font-weight-semibold, 600); }
-    #vreme, .sporedno { color: var(--color-text-secondary, var(--r-text-2)); font-size: var(--font-text-sm-size, 14px); }
+    #status { display: flex; flex-direction: column; gap: 16px; }
 
-    #kategorija {
-      display: flex; flex-direction: column; gap: 2px;
-      padding: 10px 14px;
-      border-radius: var(--border-radius-lg, 10px);
-    }
-    #kategorija[hidden] { display: none; }
-    #kategorija-naziv { font-size: var(--font-heading-md-size, 20px); font-weight: var(--font-weight-bold, 700); }
-    #kategorija-opis { font-size: var(--font-text-sm-size, 14px); }
+    /* 2. PM2.5 i PM10: dve kartice jedna pored druge */
+    #vrednosti { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .metric { padding: 14px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .metric-label { font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary, var(--r-text-2)); margin-bottom: 4px; }
+    .metric-value { font-size: 2.1rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+    .metric-value.nema { font-size: 1.1rem; font-weight: 600; color: var(--color-text-secondary, var(--r-text-2)); padding: 8px 0; }
+    .metric-unit { font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary, var(--r-muted)); margin-top: 4px; }
 
+    /* 3. Vreme merenja */
+    #vreme { text-align: center; font-size: 0.825rem; color: var(--color-text-secondary, var(--r-text-2)); }
+
+    /* 4. Kategorija: značka (boja + naziv) i napomena ispod */
+    #kategorija-blok { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    #kategorija { display: inline-block; padding: 6px 20px; border-radius: 20px; font-size: 1rem; font-weight: 700; letter-spacing: 0.02em; }
+    #kategorija-opis, .sporedno { font-size: 0.775rem; color: var(--color-text-secondary, var(--r-muted)); }
+    #napomena { text-align: center; }
+
+    /* Poruka: stari podaci, nema podataka, greška, nema saveta (Stitch: žuta kartica) */
     .poruka {
-      margin: 0;
-      padding: 10px 14px;
-      border-radius: var(--border-radius-md, 8px);
+      padding: 14px 16px;
+      border-radius: 12px;
       background: var(--color-background-warning, var(--r-warn-bg));
       color: var(--color-text-warning, var(--r-warn-text));
+      border-left: 4px solid var(--r-warn-border);
+      font-size: 0.925rem;
+      font-weight: 500;
     }
     #koren[data-stanje="ucitavanje"] .poruka {
-      background: var(--color-background-secondary, var(--r-bg-2));
+      background: var(--color-background-secondary, var(--r-sub));
       color: var(--color-text-secondary, var(--r-text-2));
+      border-left-color: var(--color-border-primary, var(--r-border));
     }
     #koren[data-stanje="error"] .poruka {
-      background: var(--color-background-danger, var(--r-bg-2));
+      background: var(--color-background-danger, var(--r-sub));
       color: var(--color-text-danger, var(--r-danger-text));
     }
+    #pokusaj-ponovo { align-self: flex-start; }
 
-    #grafikon { margin: 0; }
-    #grafikon-svg { width: 100%; max-width: 640px; height: auto; display: block; }
-    #grafikon .osa { font-size: 11px; fill: currentColor; opacity: 0.75; }
-    #grafikon figcaption {
-      display: flex; gap: 1em; flex-wrap: wrap;
-      font-size: var(--font-text-sm-size, 13px);
-      color: var(--color-text-secondary, var(--r-text-2));
-    }
+    /* 5. Grafikon 24 h */
+    #grafikon { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    #grafikon-potpis { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary, var(--r-text-2)); }
+    .legenda { display: flex; gap: 14px; font-size: 0.75rem; color: var(--color-text-secondary, var(--r-text-2)); }
     /* Boja legende (--b) se postavlja iz crtaj.ts, iz BOJA_PM25 / BOJA_PM10 u src/zajednicko/geometrija.ts. */
     .leg::before {
-      content: ""; display: inline-block; width: 1.2em; height: 0;
-      border-top: 2px solid var(--b); margin-right: 0.35em; vertical-align: middle;
+      content: ""; display: inline-block; width: 16px; height: 0;
+      border-top: 2px solid var(--b); margin-right: 6px; vertical-align: middle;
     }
     .leg.pm10::before { border-top-style: dashed; }
+    #grafikon-svg { width: 100%; height: auto; display: block; }
+    #grafikon .osa { font-size: 11px; fill: currentColor; opacity: 0.7; }
 
-    #savet-blok {
-      display: flex; flex-direction: column; gap: 4px;
-      border-top: var(--border-width-regular, 1px) solid var(--color-border-secondary, var(--r-border));
-      padding-top: 10px;
-    }
-    #savet-blok[hidden] { display: none; }
-    #savet { margin: 0; font-size: var(--font-text-lg-size, 16px); }
-    #osnov, #pravilo { margin: 0; }
+    /* 6. Savet i 7. osnov */
+    #savet-blok { display: flex; flex-direction: column; gap: 8px; }
+    .savet-kartica { padding: 14px 16px; }
+    #savet { font-size: 0.925rem; line-height: 1.45; font-weight: 500; }
+    #osnov, #pravilo { font-size: 0.75rem; line-height: 1.4; color: var(--color-text-secondary, var(--r-muted)); padding: 0 4px; }
 
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     [hidden] { display: none !important; }
+
+    @media (max-width: 480px) {
+      #koren { padding: 16px; gap: 14px; }
+      .metric-value { font-size: 1.8rem; }
+      .header-row { flex-direction: column; align-items: flex-start; }
+      .header-controls { width: 100%; justify-content: space-between; }
+    }
   </style>
 </head>
 <body>
   <main id="koren" data-stanje="ucitavanje" aria-busy="true">
-    <header>
+    <!-- Element 1: naslov, izbor stanice, Osveži -->
+    <header class="header-row">
       <h1 id="naslov">Kvalitet vazduha</h1>
-      <div class="kontrole">
-        <!-- Element 1: izbor stanice -->
-        <label for="izbor" class="sporedno">Stanica</label>
+      <div class="header-controls">
+        <label for="izbor" class="sr-only">Merna stanica</label>
         <select id="izbor" disabled></select>
         <button id="osvezi" type="button" disabled>Osveži</button>
       </div>
     </header>
 
     <div id="status" aria-live="polite">
-      <!-- Elementi 2 i 3: vrednosti i vreme merenja -->
-      <div class="merenje">
-        <ul id="vrednosti" hidden></ul>
-        <span id="vreme" hidden></span>
+      <!-- Element 2: PM2.5 i PM10 -->
+      <div id="vrednosti" hidden>
+        <div class="metric sub">
+          <span class="metric-label">PM2.5</span>
+          <span id="pm25-broj" class="metric-value"></span>
+          <span id="pm25-jedinica" class="metric-unit"></span>
+        </div>
+        <div class="metric sub">
+          <span class="metric-label">PM10</span>
+          <span id="pm10-broj" class="metric-value"></span>
+          <span id="pm10-jedinica" class="metric-unit"></span>
+        </div>
       </div>
 
-      <!-- Element 4: kategorija, boja + naziv -->
-      <div id="kategorija" hidden>
-        <span id="kategorija-naziv"></span>
+      <!-- Element 3: vreme merenja i „pre X min“ -->
+      <p id="vreme" hidden></p>
+
+      <!-- Element 4: kategorija – boja + naziv (nikad samo boja) -->
+      <div id="kategorija-blok" hidden>
+        <span id="kategorija"><span id="kategorija-naziv"></span></span>
         <span id="kategorija-opis"></span>
       </div>
       <p id="napomena" class="sporedno" hidden></p>
@@ -155,20 +197,22 @@
     </div>
 
     <!-- Element 5: grafikon 24 h iz Rezultat.history (geometrija iz src/zajednicko/, ista kao u verziji B) -->
-    <figure id="grafikon" hidden>
-      <svg id="grafikon-svg" role="img" aria-label="Grafikon PM2.5 i PM10 za poslednja 24 h"></svg>
-      <figcaption>
-        <span id="leg-pm25" class="leg pm25">PM2.5</span>
-        <span id="leg-pm10" class="leg pm10">PM10</span>
+    <div id="grafikon" class="sub" hidden>
+      <div class="chart-header">
         <span id="grafikon-potpis"></span>
-      </figcaption>
-    </figure>
+        <span class="legenda">
+          <span id="leg-pm25" class="leg pm25">PM2.5</span>
+          <span id="leg-pm10" class="leg pm10">PM10</span>
+        </span>
+      </div>
+      <svg id="grafikon-svg" role="img" aria-label="Grafikon PM2.5 i PM10 za poslednja 24 h"></svg>
+    </div>
 
     <!-- Elementi 6 i 7: savet i osnov -->
     <section id="savet-blok" hidden>
-      <p id="savet" hidden></p>
-      <p id="osnov" class="sporedno" hidden></p>
-      <p id="pravilo" class="sporedno" hidden></p>
+      <div id="savet-kartica" class="savet-kartica sub" hidden><p id="savet" hidden></p></div>
+      <p id="osnov" hidden></p>
+      <p id="pravilo" hidden></p>
     </section>
   </main>
   <script type="module" src="./app.ts"></script>
