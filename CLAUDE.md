@@ -29,8 +29,9 @@ npm run typecheck    # tsc bez emitovanja
 Ako neka od ovih skripti još ne postoji u `package.json`, reci to i predloži da se doda; ne preskači proveru ćutke.
 
 Chat aplikacija (demo): `npm run demo` → http://localhost:3010 (ili `npm start` i `npm run chat` u dva terminala).
-Stranica je kontrolna tabla; chat se otvara okruglom ikonicom dole desno. Prekidač „Verzija A / B“ u zaglavlju chata
-bira ekran (A = MCP App, B = izvorni A2UI); `?verzija=B` odmah bira B. `?chat=1` odmah otvara chat,
+Stranica je kontrolna tabla; chat se otvara okruglom ikonicom dole desno. Prekidač u zaglavlju chata bira
+„Verzija A · MCP App“ (naš chat, ekran u iframe-u) ili „Verzija B · A2UI“ (CopilotKit chat, AI slaže A2UI ekran);
+`?verzija=B` odmah bira B. `?chat=1` odmah otvara chat,
 `?mcp=http://localhost:3002/mcp` bira drugi MCP server (npr. drugi scenario).
 
 Test host za razvoj (u drugom terminalu, iz kloniranog ext-apps repoa, van ovog projekta):
@@ -55,6 +56,7 @@ Razvojno okruženje je Windows + PowerShell. Komande koje predlažeš moraju da 
 | A2UI podaci iz baze | `src/server/dashboard-a2ui.ts` | Luka | `get_dashboard` vraća i `a2ui.podaci` (gotov data model: vazduh bez saveta, `/meteo/…`, `/voda/…`, `/senzori`); u verziji B AI sam slaže izgled prema pitanju, putanje su u `src/zajednicko/a2ui-katalog.ts` |
 | Zajedničko za prikaze | `src/zajednicko/` | zajedno | EAQI boje (`boje-eaqi.ts`), ID A2UI kataloga i imena komponenti (`a2ui-katalog.ts`), format vrednosti i „pre X min“ (`format.ts`), geometrija i boje grafikona (`geometrija.ts`) |
 | Chat aplikacija (naš MCP host) | `src/chat/` | Luka | Chat sa Groq-om (`server.ts`, port 3010), stranica sa prekidačem A/B (`ui/`), sandbox za ekrane verzije A (`sandbox/`, port 3011). Verzija B: AI sastavlja A2UI ekran (`a2ui-agent.ts`, zvanični SDK `@a2ui/agent` + naše provere), chat ga crta izvorno (`ui/a2ui-prikaz.ts`). Ne računa ništa: podatke uzima iz MCP alata |
+| Verzija B preko CopilotKit-a | `src/chat/copilotkit.ts`, `copilotkit-ekran.ts`, `src/chat/ui/copilot/` | Luka | CopilotKit runtime (`/api/copilotkit`, Groq + naš MCP server), agent `a2ui`: AI poziva MCP alate pa slaže raspored preko našeg alata `prikazi_ekran`; server dodaje podatke i proverava raspored (ugrađeni A2UI alat je isključen jer bi AI upisivao brojeve). React deo (katalog `katalog.tsx`) se učitava tek kad se izabere B. Zahtev ka Groq-u se skraćuje (`prilagodiZahtev`) zbog limita 8000 tokena/min |
 | Baza (voda) | `src/core/baza/`, `db/` | Sara | PostgreSQL: šema i istorija FishNET merenja (`db/`), čitanje preko `pg` (`src/core/baza/`), alati `get_water_*` (`src/server/voda-alati.ts`) |
 | Uvoz vazduha i vremena | `src/core/baza/uvoz/`, `db/03-vazduh-vreme.sql` | Luka | Open-Meteo (vreme, vazduh – model) i Sensor.Community (senzori) → tabele `merenje_vazduha`, `merenje_vremena`; sa `EKONET_IZVOR=baza` server uvozi sam (`src/server/periodicni-uvoz.ts`, `BAZA_UVOZ_MIN`) |
 | K1 nad bazom | `src/core/ekonet/baza.ts`, `src/core/baza/vazduh-vreme.ts` | Luka | `EKONET_IZVOR=baza`: stanice i merenja vazduha iz baze (prognoze se ne vraćaju kao merenja) |

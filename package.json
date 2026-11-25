@@ -33,6 +33,10 @@
     "@a2ui/agent": "^0.1.0",
     "@a2ui/lit": "^0.15.0",
     "@a2ui/web_core": "^0.15.0",
+    "@ai-sdk/openai-compatible": "^1.0.63",
+    "@copilotkit/a2ui-renderer": "^1.90.2",
+    "@copilotkit/react-core": "^1.90.2",
+    "@copilotkit/runtime": "^1.90.2",
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "cors": "^2.8.6",
@@ -40,6 +44,8 @@
     "leaflet": "^1.9.4",
     "lit": "^3.3.3",
     "pg": "^8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -48,6 +54,8 @@
     "@types/leaflet": "^1.9.22",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.2",
+    "@types/react-dom": "^19.3.0",
     "concurrently": "^10.0.7",
     "cross-env": "^10.1.0",
     "tsx": "^4.23.15",
