@@ -49,25 +49,48 @@ const poruke: ChatPoruka[] = [];
 
 // ─── Verzija ────────────────────────────────────────────────────────────────
 
-/** Prekidač u zaglavlju chata bira verziju A (MCP App) ili B (A2UI); `?verzija=B` je bira odmah. */
+/**
+ * Prekidač u zaglavlju chata: A = naš chat sa MCP App ekranom; B = A2UI preko CopilotKit-a
+ * (src/chat/ui/copilot/). Ovaj razgovor (pitajModel, posalji) zato uvek radi kao verzija A.
+ * `?verzija=B` odmah bira B.
+ */
 function verzija(): Verzija {
-  const izabrana = document.querySelector<HTMLInputElement>('input[name="verzija"]:checked');
-  return izabrana?.value === "B" ? "B" : "A";
+  return "A";
+}
+
+// Promena verzije: B prikazuje CopilotKit chat; povratak na A počinje novi razgovor.
+document.querySelectorAll<HTMLInputElement>('input[name="verzija"]').forEach((r) =>
+  r.addEventListener("change", () => {
+    if (prikaziCopilotKit(r.value === "B")) return;
+    poruke.length = 0;
+    kontekstEkrana = null;
+    if (razgovor.childElementCount > 0) dodaj("razdelnik", `Prebačeno na ${OPIS_VERZIJE.A} – novi razgovor`);
+  }),
+);
+
+/**
+ * Verzija B: umesto našeg razgovora prikazuje se CopilotKit chat (React). Kod se učitava tek pri
+ * prvom izboru, da tabla i verzija A ostanu brze. Vraća true kad je B uključena.
+ */
+function prikaziCopilotKit(ukljuci: boolean): boolean {
+  const panel = document.getElementById("chat") as HTMLElement;
+  const koren = document.getElementById("copilotkit") as HTMLElement;
+  panel.classList.toggle("ck-aktivan", ukljuci);
+  koren.hidden = !ukljuci;
+  if (ukljuci) {
+    void import("./copilot/index.js")
+      .then((m) => m.pokreniCopilotKit(koren))
+      .catch(() => {
+        koren.textContent = "CopilotKit nije mogao da se učita.";
+      });
+  }
+  return ukljuci;
 }
 
 if (parametri.get("verzija") === "B") {
   (document.getElementById("verzija-b") as HTMLInputElement).checked = true;
+  prikaziCopilotKit(true);
 }
-
-// Promena verzije počinje novi razgovor, da bi se na prezentaciji za svaku verziju videlo
-// pitanje → poziv alata → ekran → odgovor.
-document.querySelectorAll<HTMLInputElement>('input[name="verzija"]').forEach((r) =>
-  r.addEventListener("change", () => {
-    poruke.length = 0;
-    kontekstEkrana = null;
-    if (razgovor.childElementCount > 0) dodaj("razdelnik", `Prebačeno na ${OPIS_VERZIJE[verzija()]} – novi razgovor`);
-  }),
-);
 
 // ─── Otvaranje i zatvaranje chata (okrugla ikonica dole desno) ──────────────
 

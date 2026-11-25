@@ -22,7 +22,9 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 export default defineConfig({
   root: path.resolve(import.meta.dirname, koren),
-  plugins: [viteSingleFile()],
+  // Ekrani (ui://) moraju biti jedan HTML fajl. Chat stranicu služi naš Express server, pa se pakuje
+  // u više fajlova: CopilotKit (verzija B) je poseban deo koji se preuzima tek kad se izabere.
+  plugins: UI === "chat" ? [] : [viteSingleFile()],
   build: {
     sourcemap: isDevelopment ? "inline" : undefined,
     cssMinify: !isDevelopment,

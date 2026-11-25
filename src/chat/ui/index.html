@@ -21,6 +21,12 @@
       * {
         box-sizing: border-box;
       }
+      /* Stranica je svetla. A2UI stilovi postavljaju „light dark“, pa bi u tamnom režimu sistema
+         kartice A2UI ekrana (verzija B i CopilotKit) bile crne na svetloj stranici. */
+      html,
+      .a2ui-surface {
+        color-scheme: light !important;
+      }
       html,
       body {
         height: 100%;
@@ -461,6 +467,76 @@
         justify-content: space-between;
         gap: 10px;
       }
+      /* ─── Verzija B preko CopilotKit-a ─── */
+      #copilotkit {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #copilotkit[hidden] {
+        display: none;
+      }
+      .chat.ck-aktivan #razgovor,
+      .chat.ck-aktivan > footer {
+        display: none;
+      }
+      .ck-chat {
+        flex: 1;
+        min-height: 0;
+      }
+      .ck-sitno {
+        font-size: 0.76rem;
+        color: var(--sporedno);
+      }
+      .ck-znacka {
+        align-self: flex-start;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+      .ck-znacka small {
+        font-weight: 400;
+      }
+      .ck-prognoza {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(3em, 1fr);
+        text-align: center;
+        overflow-x: auto;
+      }
+      .ck-prognoza li {
+        display: flex;
+        flex-direction: column;
+        font-size: 0.8rem;
+        gap: 2px;
+      }
+      .ck-grafikon {
+        margin: 0;
+      }
+      .ck-grafikon svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .ck-grafikon .osa {
+        font-size: 11px;
+        fill: currentColor;
+        opacity: 0.7;
+      }
+      .ck-grafikon figcaption {
+        font-size: 0.75rem;
+        color: var(--sporedno);
+      }
+      .ck-mapa {
+        height: 240px;
+        border-radius: 12px;
+        z-index: 0;
+      }
+
       .prekidac {
         display: flex;
         background: var(--pozadina);
@@ -760,6 +836,9 @@
           </form>
           <div id="status" role="status">Povezivanje…</div>
         </footer>
+
+        <!-- Verzija B preko CopilotKit-a (React, učitava se tek kad se izabere) – src/chat/ui/copilot/ -->
+        <div id="copilotkit" hidden></div>
       </section>
     </div>
     <button type="button" class="chat-dugme" id="chat-dugme" aria-label="Otvori chat" aria-controls="chat" aria-expanded="false">💬</button>

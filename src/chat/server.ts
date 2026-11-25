@@ -14,6 +14,7 @@ import path from "node:path";
 import { z } from "zod";
 import { obradiOdgovor, napraviProcesor, UPUTSTVO_DIZAJNA } from "./a2ui-agent.js";
 import { sazmiZaA2ui, sistemskaPoruka, trebaA2uiUputstvo } from "./alati.js";
+import { copilotKitRuter } from "./copilotkit.js";
 
 /** A2UI procesor (zvanični SDK) – pravi se jednom, katalog se ne menja. */
 let a2uiProcesor: ReturnType<typeof napraviProcesor> | undefined;
@@ -90,6 +91,9 @@ const OdgovorGroqSema = z.object({
 // ─── Chat server ────────────────────────────────────────────────────────────
 
 const app = express();
+// Verzija B preko CopilotKit-a (src/chat/copilotkit.ts) – pre express.json, ruter sam čita telo zahteva.
+const copilotKit = copilotKitRuter(MCP_URL);
+if (copilotKit) app.use(copilotKit);
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/konfiguracija", (_req: Request, res: Response) => {
