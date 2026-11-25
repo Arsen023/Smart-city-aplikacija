@@ -6,9 +6,14 @@ import type { PoslednjaVrednost } from "../core/tipovi.js";
 
 const broj = new Intl.NumberFormat("sr-Latn", { maximumFractionDigits: 1 });
 
+/** Samo broj, sa decimalnim zarezom i najviše jednom decimalom: 82.94 → "82,9". */
+export function tekstBroja(n: number): string {
+  return broj.format(n);
+}
+
 /** "PM2.5 12,4 µg/m³" ili "PM2.5 nije dostupno" – nedostajuća vrednost nikad nije 0 (pravilo 5). */
 export function tekstVrednosti(v: PoslednjaVrednost): string {
-  return v.vrednost === null ? `${v.velicina} nije dostupno` : `${v.velicina} ${broj.format(v.vrednost)} ${v.jedinica}`;
+  return v.vrednost === null ? `${v.velicina} nije dostupno` : `${v.velicina} ${tekstBroja(v.vrednost)} ${v.jedinica}`;
 }
 
 /**

@@ -16,13 +16,18 @@ export const dom = {
   naslov: el("naslov"),
   izbor: el<HTMLSelectElement>("izbor"),
   osvezi: el<HTMLButtonElement>("osvezi"),
-  vrednosti: el<HTMLUListElement>("vrednosti"),
+  vrednosti: el("vrednosti"),
+  pm25Broj: el("pm25-broj"),
+  pm25Jedinica: el("pm25-jedinica"),
+  pm10Broj: el("pm10-broj"),
+  pm10Jedinica: el("pm10-jedinica"),
   vreme: el("vreme"),
   grafikon: el("grafikon"),
   grafikonSvg: document.getElementById("grafikon-svg") as unknown as SVGSVGElement,
   grafikonPotpis: el("grafikon-potpis"),
   legPm25: el("leg-pm25"),
   legPm10: el("leg-pm10"),
+  kategorijaBlok: el("kategorija-blok"),
   kategorija: el("kategorija"),
   kategorijaNaziv: el("kategorija-naziv"),
   kategorijaOpis: el("kategorija-opis"),
@@ -30,6 +35,7 @@ export const dom = {
   poruka: el("poruka"),
   pokusajPonovo: el<HTMLButtonElement>("pokusaj-ponovo"),
   savetBlok: el("savet-blok"),
+  savetKartica: el("savet-kartica"),
   savet: el("savet"),
   osnov: el("osnov"),
   pravilo: el("pravilo"),
@@ -44,19 +50,18 @@ export function crtaj(m: ModelEkrana): void {
   dom.koren.dataset.stanje = m.stanje;
   dom.naslov.textContent = m.naslov;
 
-  dom.vrednosti.replaceChildren(
-    ...(m.vrednosti ?? []).map((v) => {
-      const li = document.createElement("li");
-      li.textContent = v;
-      return li;
-    }),
-  );
-  dom.vrednosti.hidden = m.vrednosti === null;
+  dom.vrednosti.hidden = m.kartice === null;
+  for (const k of m.kartice ?? []) {
+    const [broj, jedinica] = k.velicina === "PM2.5" ? [dom.pm25Broj, dom.pm25Jedinica] : [dom.pm10Broj, dom.pm10Jedinica];
+    broj.textContent = k.broj;
+    broj.classList.toggle("nema", k.jedinica === null); // „nije dostupno“ manjim slovima, nikad 0
+    tekst(jedinica, k.jedinica);
+  }
 
   tekst(dom.vreme, m.vreme);
   crtajGrafikon(m.grafikon);
 
-  dom.kategorija.hidden = m.kategorija === null;
+  dom.kategorijaBlok.hidden = m.kategorija === null;
   if (m.kategorija) {
     dom.kategorija.style.backgroundColor = m.kategorija.pozadina;
     dom.kategorija.style.color = m.kategorija.tekst;
@@ -71,6 +76,7 @@ export function crtaj(m: ModelEkrana): void {
   tekst(dom.savet, m.savet);
   tekst(dom.osnov, m.osnov);
   tekst(dom.pravilo, m.pravilo);
+  dom.savetKartica.hidden = m.savet === null;
   dom.savetBlok.hidden = m.savet === null && m.pravilo === null;
 }
 
